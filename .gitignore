@@ -1,0 +1,14 @@
+**/*.swp
+**/*.py[co]
+.tox/
+.pytest_cache/
+.coverage/
+*.eggs/
+*egg-info/
+**/__pycache__/
+**/build/
+**/dist/
+htmlcov/
+**/*.bak
+**/*.log
+flake8.out
