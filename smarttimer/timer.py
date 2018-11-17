@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-"""SmartTimer
+"""Timer
 
-SmartTimer is a cross-platform library for measuring runtime of running
-processes using a simple and flexible API.
+Timer is a cross-platform library for measuring runtime of running
+processes using a simple and extendible API.
 
 Classes:
 
@@ -117,6 +117,7 @@ class Timer:
 
     Todo:
         * Extend to support additional stats besides time (e.g. psutil).
+        * Support timings in concurrent processes.
         * Unit tests.
     """
 
