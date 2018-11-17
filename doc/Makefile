@@ -1,0 +1,16 @@
+SPHINXBUILD := python3 -m sphinx
+SOURCEDIR   := .
+BUILDDIR    := build
+SPHINXOPTS  :=
+
+.PHONY: help clean
+
+help:
+	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
+	@echo "  clean       to remove build documentation"
+
+clean:
+	rm -rf "$(BUILDDIR)"
+
+%:
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
