@@ -1,6 +1,3 @@
-.. highlight:: shell
-
-
 ======
 README
 ======
@@ -8,5 +5,6 @@ README
 SmartTimers
 ===========
 
-Wrappers for timing libraries that provide a flexible API of measuring runtime
-in sequential and nested code blocks.
+SmartTimers is a collection of libraries for measuring runtime of running
+processes using a simple and flexible API. Time can be measured in sequential
+and nested code blocks.
