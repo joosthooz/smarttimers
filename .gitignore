@@ -2,9 +2,9 @@
 **/*.py[co]
 .tox/
 .pytest_cache/
-.coverage/
+.coverage
 *.eggs/
-*egg-info/
+*.egg-info/
 **/__pycache__/
 **/build/
 **/dist/
