@@ -1,17 +1,9 @@
 #!/usr/bin/env python3
 
-"""Timer
-
-Timer is a cross-platform library for measuring runtime of running
-processes using a simple and extendible API.
+"""Utilities to measure time from system and custom clocks/counters.
 
 Classes:
-
-    Timer
-
-Functions:
-
-    custom_time() -> float
+    * Timer
 """
 
 
@@ -21,104 +13,78 @@ import time
 __all__ = ['Timer']
 
 
-def custom_time(*args, **kwargs):
-    """Example of a custom time measurement function.
-
-    Note:
-        Function can contain arbitrary positional and/or keyword arguments or
-        no argments.
-
-    Args:
-        args (tuple, optional): Arbitrary positional arguments.
-        kwargs (dict, optional): Arbitrary keyword arguments.
-
-    Returns:
-        float: Time measured in fractional seconds.
-    """
-    # Measure time ...
-    time_in_some_unit = 0.
-
-    # Convert time to fractional seconds ...
-    time_seconds = 0.
-    return time_seconds
-
-
 class Timer:
-    """Class for representing a Timer.
+    """Class to read current time from a supported clock/counter.
+
+    .. _time: https://docs.python.org/3/library/time.html
+
+    A Timer allows reading the current time given by a registered timing
+    function. Time is recorded in seconds and minutes along with an optional
+    label. Default timing functions are from the time_ standard library module.
+    Timer uses a simple and extensible API to allow registering new and custom
+    timing functions (interface needs to be compliant). If a user wants to
+    register a non-compliant timing function, a wrapper function can be used to
+    fulfill interface requirements.
 
     Attributes:
         id (str, optional): Timer identifier.
         seconds (float, optional): Time in fractional seconds.
         minutes (float): Time in fractional minutes (read-only).
-        mode (int, optional): Time mode, selectc a time measurement function.
+        mode (int, optional): Time mode used to index **TIME_MODES** map to
+                              select a time measurement function.
         DEFAULT_TIME_MODE (int): Default time mode.
-        TIME_MODES (dict): Map of time modes and time measurement functions.
+        TIME_MODES (dict of int -> function): Map of time modes and time
+                                              measurement functions.
 
-    Notes:
-        * `minutes` is read-only to maintain consistency of time values.
-
-    Register time measurement function, 'custom_time()', to mode value of '5':
-        $ Timer.TIME_MODES[5] = custom_time
-        or
-        $ Timer.TIME_MODES[len(Timer.TIME_MODES)] = custom_time
-
-    Time measurement functions included:
-        time.perf_counter():
-            Return the value (in fractional seconds) of a performance counter,
-            i.e. a clock with the highest available resolution to measure a
-            short duration. It does include time elapsed during sleep and is
-            system-wide. The reference point of the returned value is
-            undefined, so that only the difference between the results of
-            consecutive calls is valid. New in version 3.3.
-
-        time.process_time():
-            Return the value (in fractional seconds) of the sum of the system
-            and user CPU time of the current process. It does not include time
-            elapsed during sleep. It is process-wide by definition. The
-            reference point of the returned value is undefined, so that only
-            the difference between the results of consecutive calls is valid.
-            New in version 3.3.
-
-        time.clock():
-            On Unix, return the current processor time as a floating point
-            number expressed in seconds. The precision, and in fact the very
-            definition of the meaning of 'processor time', depends on that of
-            the C function of the same name. On Windows, this function returns
-            wall-clock seconds elapsed since the first call to this function,
-            as a floating point number, based on the Win32 function
-            QueryPerformanceCounter(). The resolution is typically better than
-            one microsecond. Deprecated since version 3.3: The behaviour of
-            this function depends on the platform: use perf_counter() or
-            process_time() instead, depending on your requirements, to have a
-            well defined behaviour.
-
-        time.monotonic():
-            Return the value (in fractional seconds) of a monotonic clock, i.e.
-            a clock that cannot go backwards. The clock is not affected by
-            system clock updates. The reference point of the returned value is
-            undefined, so that only the difference between the results of
-            consecutive calls is valid. On Windows versions older than Vista,
-            monotonic() detects GetTickCount() integer overflow (32 bits,
-            roll-over after 49.7 days). It increases an internal epoch
-            (reference time) by 232 each time that an overflow is detected. The
-            epoch is stored in the process-local state and so the value of
-            monotonic() may be different in two Python processes running for
-            more than 49 days. On more recent versions of Windows and on other
-            operating systems, monotonic() is system-wide. New in version 3.3.
-            Changed in version 3.5: The function is now always available.
-
-        time.time():
-            Return the time in seconds since the epoch as a floating point
-            number. The specific date of the epoch and the handling of leap
-            seconds is platform dependent. On Windows and most Unix systems,
-            the epoch is January 1, 1970, 00:00:00 (UTC) and leap seconds are
-            not counted towards the time in seconds since the epoch. This is
-            commonly referred to as Unix time.
+    Note:
+        * **minutes** is read-only and set automatically when **seconds** is
+          modified. This ensures consistency between time values.
+        * When registering a new timing function, the user has freedom of which
+          time mode to use (add new mode value or overwrite an existing mode).
 
     Todo:
+        * Fix attributes and property documentation, attributes appear twice.
+        * Order class methods.
+        * Add documentation on support of logical operators for Timers.
         * Extend to support additional stats besides time (e.g. psutil).
         * Support timings in concurrent processes.
         * Unit tests.
+
+    .. _`time.perf_counter()`:
+        https://docs.python.org/3/library/time.html#time.perf_counter
+    .. _`time.process_time()`:
+        https://docs.python.org/3/library/time.html#time.process_time
+    .. _`time.clock()`:
+        https://docs.python.org/3/library/time.html#time.clock
+    .. _`time.monotonic()`:
+        https://docs.python.org/3/library/time.html#time.monotonic
+    .. _`time.time()`:
+        https://docs.python.org/3/library/time.html#time.time
+
+    Time measurement functions
+        * `time.perf_counter()`_
+        * `time.process_time()`_
+        * `time.clock()`_
+        * `time.monotonic()`_
+        * `time.time()`_
+
+    Custom time measurement function
+        A timing function is compliant if it returns a time measured in
+        fractional seconds. The function can contain arbitrary positional
+        and/or keyword arguments or no arguments.
+
+        **Example**::
+
+            def custom_time_function(*args, **kwargs):
+                # Measure time ...
+                time_in_some_unit = 0.
+
+                # Convert time to fractional seconds ...
+                time_seconds = 0.
+                return time_seconds
+
+            # Register custom_time_function() to mode 5
+            >>> Timer.TIME_MODES[5] = custom_time_function
     """
 
     DEFAULT_TIME_MODE = 0
@@ -133,38 +99,41 @@ class Timer:
     def __init__(self, id='', seconds=0., mode=-1):
         """Constructor for Timer class.
 
-        The `seconds` argument is used as the initial time measured.
-        The attribute `minutes` is set automatically by the `seconds` setter
+        The **seconds** argument is used as the initial time measured.
+        The attribute **minutes** is set automatically by the **seconds** setter
         method.
         """
         self.id = id
         self.seconds = seconds
         self.mode = mode
 
-    def show_modes(self):
+    @classmethod
+    def show_modes(cls):
         """Print available time modes and time measurement functions."""
-        for k, v in type(self).TIME_MODES.items():
+        for k, v in cls.TIME_MODES.items():
             print(k,v)
-        print("Default mode is {}".format(type(self).DEFAULT_TIME_MODE))
-        print("Current mode is {}".format(self.mode))
+        print("Default mode is {}".format(cls.DEFAULT_TIME_MODE))
 
     @property
     def mode(self):
         """Get or set the time mode.
 
-        The time `mode` indexes the `TIME_MODES` mapping to select a time
-        measurement function. If `mode` is set to a negative value then
-        `DEFAULT_TIME_MODE` is used.
+        The time **mode** indexes the **TIME_MODES** mapping to select a time
+        measurement function. If **mode** is set to a negative value then
+        **DEFAULT_TIME_MODE** is used.
 
-        To find the timing function that is enabled for a given Timer instance:
-            $ t = Timer()
-            $ Timer.TIME_MODES[t.mode]
-            or
-            $ t.show_modes()
+        **Example**::
 
-        To change the time mode for a Timer:
-            $ t = Timer()
-            $ t.mode = 3
+            # Find the timing function of a Timer
+            >>> t = Timer()
+            >>> Timer.TIME_MODES[t.mode]
+            # or
+            >>> Timer.show_modes()
+            >>> t.mode
+
+            # Change the time mode of a Timer
+            >>> t = Timer()
+            >>> t.mode = 3
 
         Args:
             mode (int): Time mode used to select a time measurement function.
@@ -173,7 +142,7 @@ class Timer:
             int: Time mode.
 
         Raises:
-            TypeError: If `mode` is not an integer.
+            TypeError: If **mode** is not an integer.
         """
         return self._mode
 
@@ -196,7 +165,7 @@ class Timer:
             str: Timer identifier.
 
         Raises:
-            TypeError: If `id` is not a string.
+            TypeError: If **id** is not a string.
         """
         return self._id
 
@@ -221,8 +190,8 @@ class Timer:
             float: Time in seconds.
 
         Raises:
-            TypeError: If `seconds` is not numeric (int or float).
-            ValueError: If `seconds` is a negative number.
+            TypeError: If **seconds** is not numeric (*int* or *float*).
+            ValueError: If **seconds** is a negative number.
         """
         return self._seconds
 
@@ -242,7 +211,7 @@ class Timer:
         """Get time measured in minutes.
 
         Returns:
-            float: time in minutes.
+            float: Time in minutes.
         """
         return self._minutes
 
@@ -250,14 +219,15 @@ class Timer:
         """String representation of a Timer.
 
         Returns:
-            str: comma delimited string, format is `seconds`, `minutes`, `id`.
+            str: comma delimited string, format is **seconds**, **minutes**,
+                 **id**.
         """
         return "{:.4f}, {:.4f}, {}".format(self.seconds, self.minutes, self.id)
 
     def time(self, *args, **kwargs):
         """Invoke time measurement function and record measured time.
 
-        Calls timing function currently configured via time `mode`.
+        Calls timing function currently configured via time **mode**.
         This method accepts arbitrary positional and/or keyword arguments to
         enable support for arbitrary signatures of timing functions.
 
@@ -271,43 +241,121 @@ class Timer:
         self.seconds = self._time_func(*args, **kwargs)
         return self.seconds
 
-    def __sub__(self, other):
+    @classmethod
+    def are_compatible(cls, t1, t2):
+        """Check if Timer pair use the same timing function.
+
+        Args:
+            t1 (Timer): First Timer.
+            t2 (Timer): Second Timer.
+
+        Returns:
+            bool: True if Timer pair are compatible, else False
+        """
+        return cls.TIME_MODES[t1.mode] is cls.TIME_MODES[t2.mode]
+
+    @classmethod
+    def compatibility_test(cls, t1, t2):
+        """Check if Timer pair use the same timing function.
+
+        Args:
+            t1 (Timer): First Timer.
+            t2 (Timer): Second Timer.
+
+        Raises:
+            ValueError: If timing function differs between Timer pair.
+        """
+        if not cls.are_compatible(t1, t2):
+            raise ValueError("Incompatible Timers, time modes differ")
+        pass
+
+    @classmethod
+    def diff(cls, t1, t2):
         """Compute the absolute time difference of Timer pair.
 
-        The `id` of the resulting Timer contains a combination of the input
-        Timer `ids`.
+        The **id** of the resulting Timer contains a combination of the input
+        Timer **ids**. The subtract operator is an alias to **diff**.
+
+        **Example**::
+
+            >>> dt = Timer.diff(t1, t2)
+            # or
+            >>> dt = t2 - t1
+            # or
+            >>> dt = t1 - t2
 
         Args:
-            other (:obj:`Timer`): Timer for subtracting its time values.
+            t1 (Timer): First Timer.
+            t2 (Timer): Second Timer.
 
         Returns:
-            :obj:`Timer`: Timer with absolute time difference of Timer pair.
+            Timer: Timer with absolute time difference of Timer pair.
 
         Raises:
-            ValueError: If Timer pair does not have the same time `mode`.
+            ValueError: If Timer pair are not compatible.
         """
-        if self.mode != other.mode:
-            raise ValueError("Incompatible Timers, time modes differ")
-        new_id = '-'.join(filter(None, [self.id, other.id]))
-        return Timer(new_id, abs(self.seconds - other.seconds))
+        cls.compatibility_test(t1, t2)
+        new_id = '-'.join(filter(None, [t1.id, t2.id]))
+        return Timer(new_id, abs(t1.seconds - t2.seconds))
+
+    @classmethod
+    def add(cls, t1, t2):
+        """Sums the times of Timer pair.
+
+        The **id** of the resulting Timer contains a combination of the input
+        Timer **ids**. The addition operator is an alias to **add**.
+
+        **Example**::
+
+            >>> dt = Timer.add(t1, t2)
+            # or
+            >>> dt = t1 + t2
+            # or
+            >>> dt = t2 + t1
+
+        Args:
+            t1 (Timer): First Timer.
+            t2 (Timer): Second Timer.
+
+        Returns:
+            Timer: Timer with time sum of Timer pair.
+
+        Raises:
+            ValueError: If Timer pair are not compatible.
+        """
+        cls.compatibility_test(t1, t2)
+        new_id = '+'.join(filter(None, [t1.id, t2.id]))
+        return Timer(new_id, t1.seconds + t2.seconds)
 
     def __add__(self, other):
-        """Compute the time sum of Timer pair.
+        """See **add()** method."""
+        return type(self).add(self, other)
 
-        The `id` of the resulting Timer contains a combination of the input
-        Timer `ids`. Raises a ValueError exception if Timer pair does not have
-        the same time `mode`.
+    def __sub__(self, other):
+        """See **diff()** method."""
+        return type(self).diff(self, other)
 
-        Args:
-            other (:obj:`Timer`): Timer for adding its time values.
+    def __eq__(self, other):
+        """Equality operator.
 
-        Returns:
-            :obj:`Timer`: Timer with time sum of Timer pair.
-
-        Raises:
-            ValueError: If Timer pair does not have the same time `mode`.
+        By default **__ne__()** inverts this result.
         """
-        if self.mode != other.mode:
-            raise ValueError("Incompatible Timers, time modes differ")
-        new_id = '+'.join(filter(None, [self.id, other.id]))
-        return Timer(new_id, self.seconds + other.seconds)
+        type(self).compatibility_test(self, other)
+        return self.seconds == other.seconds
+
+    def __lt__(self, other):
+        """Less than."""
+        type(self).compatibility_test(self, other)
+        return self.seconds < other.seconds
+
+    def __le__(self, other):
+        """Less than or equal."""
+        return self < other or self == other
+
+    def __gt__(self, other):
+        """Greater than."""
+        return not (self <= other)
+
+    def __ge__(self, other):
+        """Greater than or equal."""
+        return not (self < other)
