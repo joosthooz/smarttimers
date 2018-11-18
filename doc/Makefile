@@ -1,7 +1,7 @@
 SPHINXBUILD := python3 -m sphinx
 SOURCEDIR   := .
 BUILDDIR    := build
-SPHINXOPTS  :=
+SPHINXOPTS  := -W
 
 .PHONY: help clean
 
