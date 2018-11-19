@@ -1,5 +1,6 @@
-include LICENSE
 include *.rst
+include LICENSE
 recursive-include doc *.py *.rst Makefile
-recursive-include tests *.py
 recursive-include smarttimer *.py
+recursive-include tests *.py
+recursive-include examples *.py
