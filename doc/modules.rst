@@ -7,7 +7,9 @@ Timer
 
 .. automodule:: smarttimer.timer
     :members:
-    :undoc-members:
+
+.. autoclass:: smarttimer.timer.TimerDict
+    :members:
 
 
 SmartTimer
@@ -15,7 +17,6 @@ SmartTimer
 
 .. automodule:: smarttimer.smarttimer
     :members:
-    :undoc-members:
 
 
 Tests
