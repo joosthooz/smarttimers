@@ -1,4 +1,3 @@
-=======
 CREDITS
 =======
 
@@ -9,7 +8,7 @@ name (N), email (E), web-address (W), country (C), description (D), issues (I).
 
 
 Author
-======
+------
 
 ::
 

@@ -3,7 +3,7 @@ TESTDIR := tests
 PYTHON  := python3
 DOCDIR  := doc
 
-.PHONY: help wheel build clean html
+.PHONY: help wheel build clean doc
 
 help:
 	@echo "Please use 'make <target>' where <target> is one of"
@@ -23,6 +23,7 @@ clean:
 	rm -rf .tox htmlcov
 	rm -rf "$(PKGDIR)/__pycache__"
 	rm -rf "$(TESTDIR)/__pycache__"
+	$(MAKE) -C $(DOCDIR) clean
 
-html:
+doc:
 	$(MAKE) -C $(DOCDIR) html

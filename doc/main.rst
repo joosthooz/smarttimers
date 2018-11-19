@@ -1,3 +1,7 @@
+===========
+SmartTimers
+===========
+
 .. include:: ../README.rst
 .. include:: ../HISTORY.rst
 .. include:: ../CONTRIBUTING.rst
