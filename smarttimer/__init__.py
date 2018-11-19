@@ -13,11 +13,12 @@ __all__ = [
 
 __title__ = "SmartTimer"
 __name__ = "SmartTimer"
-__version__ = "0.2.2"
+__version__ = "0.3.0"
 __description__ = "SmartTimer library"
 __keywords__ = [
     "time",
-    "profiling"
+    "profiling",
+    "walltime"
     ]
 __url__ = "https://github.com/edponce/smarttimers"
 __author__ = "Eduardo Ponce, The University of Tennessee, Knoxville, TN"

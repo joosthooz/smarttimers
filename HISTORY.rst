@@ -3,12 +3,25 @@
     https://docs.python.org/3/library/time.html#time.get_clock_info
 
 
-=======
 HISTORY
 =======
 
+v0.3.0
+------
+
+:Date: 2018-11-18
+
+Features
+    * Timer: added an example script.
+    * Timer: added MetaTimerProperty and TimerDict for handling class variable
+      properties.
+    * Timer: improved exception coverage.
+    * Timer: improved methods for checking compatibility and print clock info.
+    * Timer: time values are cleared when clock name is changed.
+
+
 v0.2.2
-======
+------
 
 :Date: 2018-11-18
 
@@ -18,7 +31,7 @@ Features
 
 
 v0.2.0
-======
+------
 
 :Date: 2018-11-17
 
@@ -28,7 +41,7 @@ Features
 
 
 v0.1.0
-======
+------
 
 :Date: 2018-11-15
 
