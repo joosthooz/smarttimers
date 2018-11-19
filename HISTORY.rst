@@ -6,6 +6,18 @@
 HISTORY
 =======
 
+v0.4.0
+------
+
+:Date: 2018-11-19
+
+Features
+    * Timer: added print/get_clock_info methods.
+    * Timer: improved compatibility checks.
+    * Timer: added TimerCompatibilityError exception.
+    * Timer: revised documentation.
+
+
 v0.3.0
 ------
 

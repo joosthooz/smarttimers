@@ -13,7 +13,7 @@ __all__ = [
 
 __title__ = "SmartTimer"
 __name__ = "SmartTimer"
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 __description__ = "SmartTimer library"
 __keywords__ = [
     "time",
