@@ -4,7 +4,7 @@ from smarttimer import Timer
 t1 = Timer('Timer1')
 print(Timer.CLOCKS[t1.clock_name])
 # or
-Timer.print_clocks()
+Timer.print_clocks_info()
 print(t1.clock_name)
 
 # Change current time function
@@ -16,6 +16,7 @@ print(t1)
 
 # Create another Timer compatible with 'Timer1'
 t2 = Timer('Timer2', clock_name='process_time')
+t2.print_clock_info()
 t2.time()
 print(t2)
 

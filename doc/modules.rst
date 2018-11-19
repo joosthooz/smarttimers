@@ -11,6 +11,8 @@ Timer
 .. autoclass:: smarttimer.timer.TimerDict
     :members:
 
+.. autoclass:: smarttimer.timer.TimerCompatibilityError
+
 
 SmartTimer
 ==========
