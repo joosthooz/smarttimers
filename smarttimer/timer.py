@@ -10,10 +10,10 @@ Classes:
     * :py:class:`TimerCompatibilityError`
 
 Todo:
+    * Change exception message to the negative form (e.g., x is not a string)
     * Extend to support additional stats besides time (e.g. psutil).
     * Support timing concurrent processes, use time.thread_time() from Python
       3.7?
-    * Complete unit tests.
 
 .. _`time.get_clock_info`:
     https://docs.python.org/3/library/time.html#time.get_clock_info
@@ -37,7 +37,7 @@ import time
 import types
 
 
-__all__ = ['Timer']
+__all__ = ['Timer', 'TimerDict']
 
 
 class TimerTypeError(Exception):
@@ -98,18 +98,34 @@ class TimerCompatibilityError(Exception):
 
 
 class TimerDict(dict):
-    """Map between label identifier and callable entity.
+    """Map between label identifier and callable object.
 
     Raises:
         :py:class:`TimerTypeError`: If key is not a string.
-        :py:class:`TimerTypeError`: If value is not a callable entity.
+        :py:class:`TimerValueError`: If value is not a callable object.
     """
+    def __init__(self, value=dict()):
+        self.update(value)
+
     def __setitem__(self, key, value):
         if not isinstance(key, str):
-            raise TimerKeyError(type(self), str)
+            raise TimerKeyError(str(type(self)) + 'key', str)
         if not callable(value):
-            raise TimerTypeError(type(self), 'callable object')
+            raise TimerValueError(str(type(self)) + '[key]', 'callable object')
         super().__setitem__(key, value)
+
+    def __getitem__(self, key):
+        if not isinstance(key, str):
+            raise TimerKeyError(str(type(self)) + 'key', str)
+        if key not in self.keys():
+            raise TimerKeyError(str(type(self)) + '[key]', 'existing key')
+        return super().__getitem__(key)
+
+    def update(self, value):
+        if not isinstance(value, (dict, type(self))):
+            raise TimerTypeError(type(self), [dict, type(self)])
+        for k, v in value.items():
+            self[k] = v
 
 
 class MetaTimerProperty(type):
@@ -136,9 +152,10 @@ class MetaTimerProperty(type):
 
     @CLOCKS.setter
     def CLOCKS(cls, value):
-        if not isinstance(value, TimerDict):
-            raise TimerTypeError('CLOCKS', TimerDict)
-        cls._CLOCKS = value
+        if not isinstance(value, (dict, TimerDict)):
+            raise TimerTypeError('CLOCKS', [dict, TimerDict])
+        cls._CLOCKS = value if isinstance(value, TimerDict) \
+            else TimerDict(value)
 
 
 class Timer(metaclass=MetaTimerProperty):
@@ -218,7 +235,7 @@ class Timer(metaclass=MetaTimerProperty):
             Raises:
                 :py:class:`TimerTypeError`: If not a :py:class:`TimerDict` or
                     assigned item is not a callable object.
-                :py:class:`TimerKeyError`: If item key is not a string.
+                :py:class:`TimerKeyError`: If key is not a string.
 
         id (str): Label identifier.
 
@@ -248,6 +265,8 @@ class Timer(metaclass=MetaTimerProperty):
 
             Raises:
                 :py:class:`TimerTypeError`: If not a string.
+                :py:class:`TimerKeyError`: If not an existing key in
+                    :py:attr:`CLOCKS`.
    """
 
     _DEFAULT_CLOCK_NAME = 'perf_counter'
@@ -257,12 +276,28 @@ class Timer(metaclass=MetaTimerProperty):
         'process_time': time.process_time,
         'clock': time.clock,
         'monotonic': time.monotonic,
-        'time': time.time})
+        'time': time.time
+    })
 
     def __init__(self, id='', **kwargs):
         self.id = id
-        self.seconds = kwargs.get('seconds', 0.)
-        self.clock_name = kwargs.get('clock_name', '')
+
+        # Check if another Timer is provided for initialization
+        other = kwargs.get('timer')
+        if isinstance(other, Timer):
+            self._set_time(other.seconds)
+            self.clock_name = other.clock_name
+        else:
+            # Do checks here because attribute is read-only
+            seconds = kwargs.get('seconds', 0.)
+            if not isinstance(seconds, (int, float)):
+                raise TimerTypeError('seconds', float)
+            if seconds < 0.:
+                raise TimerValueError('seconds', "non-negative number")
+            self._set_time(seconds)
+
+            self.clock_name = kwargs.get('clock_name',
+                                         type(self).DEFAULT_CLOCK_NAME)
 
     def __repr__(self):
         """String representation.
@@ -319,6 +354,10 @@ class Timer(metaclass=MetaTimerProperty):
     def __ge__(self, other):
         return not (self < other)
 
+    def _set_time(self, seconds):
+        self._seconds = float(seconds)
+        self._minutes = seconds / 60.
+
     @property
     def id(self):
         return self._id
@@ -332,15 +371,6 @@ class Timer(metaclass=MetaTimerProperty):
     @property
     def seconds(self):
         return self._seconds
-
-    @seconds.setter
-    def seconds(self, seconds):
-        if not isinstance(seconds, (int, float)):
-            raise TimerTypeError('seconds', float)
-        if seconds < 0.:
-            raise TimerValueError('seconds', "non-negative number")
-        self._seconds = float(seconds)
-        self._minutes = seconds / 60.
 
     @property
     def minutes(self):
@@ -357,13 +387,13 @@ class Timer(metaclass=MetaTimerProperty):
 
         # Clear time if new clock is incompatible with previous one. Skip
         # check if setting for the first time (e.g., __init__) to prevent
-        # clearing time values they had been set previously.
+        # clearing time values that had been set previously.
         #
         # Note: can create an infinite loop if not careful. is_compatible() is
         # called which in turn creates a Timer object which calls this property
         # during initialization.
         if hasattr(self, '_clock_name') and not self.is_compatible(clock_name):
-            self.seconds = 0.
+            self.clear()
 
         self._clock_name = clock_name if clock_name \
             else type(self).DEFAULT_CLOCK_NAME
@@ -383,18 +413,18 @@ class Timer(metaclass=MetaTimerProperty):
         Returns:
             float: Time measured in fractional seconds.
         """
-        self.seconds = self._clock(*args, **kwargs)
+        self._set_time(self._clock(*args, **kwargs))
         return self.seconds
 
     def reset(self):
         """Reset the clock instance to default values."""
         self.id = ''
         self.clock_name = type(self).DEFAULT_CLOCK_NAME
-        seconds = 0.
+        self.clear()
 
     def clear(self):
         """Set time values to zero."""
-        seconds = 0.
+        self._set_time(0.)
 
     def get_info(self):
         """Return clock information.
@@ -443,22 +473,16 @@ class Timer(metaclass=MetaTimerProperty):
         Returns:
             bool: True if compatible, else False.
         """
-        # This allows comparing instance compatibility against a string.
-        #
-        # Note: Do not move inside 'try' so KeyError gets raised if 'other' is
-        # not a valid clock name. This is not a compatibility error.
-        if isinstance(other, str):
-            other = Timer(clock_name=other)
+        if not isinstance(other, Timer):
+            return False
+
+        # Exception occurs when time.get_clock_info() receives an unknown clock
         try:
             return time.get_clock_info(self.clock_name) == \
                        time.get_clock_info(other.clock_name)
-        except (AttributeError, TypeError, ValueError) as ex:
-            pass
-        try:
+        except Exception:
             return type(self).CLOCKS[self.clock_name] is \
-                type(self).CLOCKS[other.clock_name]
-        except (AttributeError, TypeError, KeyError) as ex:
-            return False
+                       type(self).CLOCKS[other.clock_name]
 
     @classmethod
     def sum(cls, timer1, timer2):
@@ -528,6 +552,9 @@ class Timer(metaclass=MetaTimerProperty):
         Args:
             clock_name (str): Clock name.
         """
+        # Query map using __getitem__ property to check for valid key because
+        # 'del' does not triggers __getitem__.
+        dummy = cls.CLOCKS[clock_name]
         del cls.CLOCKS[clock_name]
 
     @classmethod
