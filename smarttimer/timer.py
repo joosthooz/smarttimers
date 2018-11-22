@@ -10,10 +10,9 @@ Classes:
     * :py:class:`TimerCompatibilityError`
 
 Todo:
-    * Change exception message to the negative form (e.g., x is not a string)
     * Extend to support additional stats besides time (e.g. psutil).
-    * Support timing concurrent processes, use time.thread_time() from Python
-      3.7?
+    * Support timing concurrent processes, use time.thread_time() (requires
+      Python 3.7).
 
 .. _`time.get_clock_info`:
     https://docs.python.org/3/library/time.html#time.get_clock_info
@@ -40,53 +39,36 @@ import types
 __all__ = ['Timer', 'TimerDict']
 
 
-class TimerTypeError(Exception):
-    """Exception for invalid data type assigment in :py:class:`Timer`.
+class TimerException(Exception):
+    """Base exception for invalid data in :py:class:`Timer`.
 
     A *name* and *dtype* are used as a pair, otherwise *msg* is used.
 
     Args:
-        msg_or_name (str, optional): Error message or data name.
-        dtype (obj, optional): Valid data type.
+        msg_or_data (str, optional): Error message or data name.
+        dtype (obj, str, optional): Valid data.
     """
     def __init__(self, msg_or_name='', dtype=None):
-        self.message = "'{}' requires a '{}'".format(msg_or_name, dtype) \
+        self.message = "{} is not a {}".format(msg_or_name, dtype) \
                        if dtype else msg_or_name
         super().__init__(self.message)
 
-
-class TimerValueError(Exception):
-    """Exception for invalid values in :py:class:`Timer`.
-
-    A *name* and *dvalue* are used as a pair, otherwise *msg* is used.
-
-    Args:
-        msg_or_name (str, optional): Error message or data name.
-        dvalue (str, optional): Valid data value.
-    """
-    def __init__(self, msg_or_name='', dvalue=''):
-        self.message = "'{}' requires a '{}'".format(msg_or_name, dvalue) \
-                       if dvalue else msg_or_name
-        super().__init__(self.message)
+class TimerTypeError(TimerException):
+    """Exception for invalid data type assigment in :py:class:`Timer`."""
+    pass
 
 
-class TimerKeyError(Exception):
-    """Exception for invalid key indexing in :py:class:`TimerDict`.
-
-    If *dtype* is provided, default message is used. Otherwise only
-    *msg_or_key* is used.
-
-    Args:
-        msg_or_key (str, optional): Error message or dictionary key.
-        dtype (obj, optional): Valid data type.
-    """
-    def __init__(self, msg_or_key='', dtype=''):
-        self.message = "'{}' index requires a '{}'".format(msg_or_key, dtype) \
-                       if dtype else msg_or_key
-        super().__init__(self.message)
+class TimerValueError(TimerException):
+    """Exception for invalid values in :py:class:`Timer`."""
+    pass
 
 
-class TimerCompatibilityError(Exception):
+class TimerKeyError(TimerException):
+    """Exception for invalid key indexing in :py:class:`TimerDict`."""
+    pass
+
+
+class TimerCompatibilityError(TimerException):
     """Exception for incompatible :py:class:`Timer` instances.
 
     Args:
@@ -100,12 +82,16 @@ class TimerCompatibilityError(Exception):
 class TimerDict(dict):
     """Map between label identifier and callable object.
 
+    Args:
+        tdict (dict, TimerDict, optional): Dictionary for initialization.
+
     Raises:
-        :py:class:`TimerTypeError`: If key is not a string.
+        :py:class:`TimerTypeError`: If *tdict* is not derived from dict.
+        :py:class:`TimerKeyError`: If keys are not strings or does not exists.
         :py:class:`TimerValueError`: If value is not a callable object.
     """
-    def __init__(self, value=dict()):
-        self.update(value)
+    def __init__(self, tdict=dict()):
+        self.update(tdict)
 
     def __setitem__(self, key, value):
         if not isinstance(key, str):
@@ -121,10 +107,10 @@ class TimerDict(dict):
             raise TimerKeyError(str(type(self)) + '[key]', 'existing key')
         return super().__getitem__(key)
 
-    def update(self, value):
-        if not isinstance(value, (dict, type(self))):
+    def update(self, tdict):
+        if not isinstance(tdict, (dict, type(self))):
             raise TimerTypeError(type(self), [dict, type(self)])
-        for k, v in value.items():
+        for k, v in tdict.items():
             self[k] = v
 
 
@@ -162,12 +148,16 @@ class Timer(metaclass=MetaTimerProperty):
     """Read current time from a clock/counter.
 
     Args:
-        id (str): Label identifier. Default is empty string.
+        id (str, optional): Label identifier. Default is empty string.
 
-        seconds (float): Time measured in fractional seconds. Default is 0.0.
+        seconds (float, optional): Time measured in fractional seconds. Default
+            is 0.0.
 
-        clock_name (str): Clock name used to select a time measurement
-            function. Default is empty string.
+        clock_name (str, optional): Clock name used to select a time
+            measurement function. Default is :py:attr:`DEFAULT_CLOCK_NAME`.
+
+        timer (dict, TimerDict, optional): :py:class:`Timer` for
+            initialization.
 
     A :py:class:`Timer` allows recording the current time measured by a
     registered timing function. Time is recorded in fractional seconds and
@@ -229,32 +219,28 @@ class Timer(metaclass=MetaTimerProperty):
             Raises:
                 :py:class:`TimerTypeError`: If not a string.
 
-        CLOCKS (:py:class:`TimerDict`, str -> callable obj): Map between clock
+        CLOCKS (:py:class:`TimerDict`, str -> callable): Map between clock
             name and time measurement functions.
 
             Raises:
-                :py:class:`TimerTypeError`: If not a :py:class:`TimerDict` or
-                    assigned item is not a callable object.
+                :py:class:`TimerTypeError`: If not assigned with dictionary.
                 :py:class:`TimerKeyError`: If key is not a string.
+                :py:class:`TimerValueError`: If assigned item is not callable.
 
         id (str): Label identifier.
 
             Raises:
                 :py:class:`TimerTypeError`: If not a string.
 
-        seconds (float): Time measured in fractional seconds.
+        seconds (float): Time measured in fractional seconds (read-only).
 
-            Automatically sets :py:attr:`minutes` when is modified. This
-            ensures consistency between recorded times.
+            Set internally either during initialization or when recording time.
 
             Raises:
                 :py:class:`TimerTypeError`: If not numeric.
                 :py:class:`TimerValueError`: If negative number.
 
         minutes (float): Time measured in minutes (read-only).
-
-            Automatically set when :py:attr:`seconds` is modified. This ensures
-            consistency between recorded times.
 
         clock_name (str): Clock name used to select a time measurement
             function.
@@ -265,8 +251,6 @@ class Timer(metaclass=MetaTimerProperty):
 
             Raises:
                 :py:class:`TimerTypeError`: If not a string.
-                :py:class:`TimerKeyError`: If not an existing key in
-                    :py:attr:`CLOCKS`.
    """
 
     _DEFAULT_CLOCK_NAME = 'perf_counter'
@@ -288,14 +272,7 @@ class Timer(metaclass=MetaTimerProperty):
             self._set_time(other.seconds)
             self.clock_name = other.clock_name
         else:
-            # Do checks here because attribute is read-only
-            seconds = kwargs.get('seconds', 0.)
-            if not isinstance(seconds, (int, float)):
-                raise TimerTypeError('seconds', float)
-            if seconds < 0.:
-                raise TimerValueError('seconds', "non-negative number")
-            self._set_time(seconds)
-
+            self._set_time(kwargs.get('seconds', 0.))
             self.clock_name = kwargs.get('clock_name',
                                          type(self).DEFAULT_CLOCK_NAME)
 
@@ -355,6 +332,11 @@ class Timer(metaclass=MetaTimerProperty):
         return not (self < other)
 
     def _set_time(self, seconds):
+        # Do checks here because attribute is read-only
+        if not isinstance(seconds, (int, float)):
+            raise TimerTypeError('seconds', float)
+        if seconds < 0.:
+            raise TimerValueError('seconds', "non-negative number")
         self._seconds = float(seconds)
         self._minutes = seconds / 60.
 
@@ -459,8 +441,7 @@ class Timer(metaclass=MetaTimerProperty):
                       info=self.get_info()))
 
     def is_compatible(self, other):
-        """Return truth of compatibility between a :py:class:`Timer` or clock
-        name.
+        """Return truth of compatibility between a :py:class:`Timer` pair.
 
         For a :py:attr:`clock_name` that can be queried with
         `time.get_clock_info`_, compatibility requires that all attributes are
@@ -468,7 +449,7 @@ class Timer(metaclass=MetaTimerProperty):
         same function.
 
         Args:
-            other (Timer, str): Second instance or :py:attr:`clock_name`.
+            other (Timer): Second instance.
 
         Returns:
             bool: True if compatible, else False.
@@ -534,7 +515,7 @@ class Timer(metaclass=MetaTimerProperty):
 
         If a mapping already exists for *clock_name*, it will be updated with
         *clock_func*. For invalid arguments, error handling is expected from
-        :py:attr:`CLOCKS` property methods.
+        :py:attr:`CLOCKS` properties.
 
         Args:
             clock_name (str): Clock name.
@@ -547,7 +528,7 @@ class Timer(metaclass=MetaTimerProperty):
         """Remove a registered clock from :py:attr:`CLOCKS` map.
 
         For invalid arguments, error handling is expected from
-        :py:attr:`CLOCKS` property methods.
+        :py:attr:`CLOCKS` properties.
 
         Args:
             clock_name (str): Clock name.
