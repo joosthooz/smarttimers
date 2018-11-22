@@ -2,7 +2,7 @@
    :target: https://travis-ci.org/edponce/smarttimers
    :alt: Tests Status
 
-.. image:: https://coveralls.io/repos/github/edponce/smarttimers/badge.svg?branch=master
+.. .. image:: https://coveralls.io/repos/github/edponce/smarttimers/badge.svg?branch=master
    :target: https://coveralls.io/github/edponce/smarttimers?branch=master
    :alt: Coverage Status
 
