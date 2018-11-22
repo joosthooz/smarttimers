@@ -1,6 +1,6 @@
 sudo: false
 notifications:
-    emai: false
+    email: false
 branches:
     only:
         - master

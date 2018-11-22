@@ -34,6 +34,7 @@ setup_requirements = [
 # A list of strings specifying what other distributions need to be present
 # for this package tests to run.
 tests_requirements = [
+    'PyYAML>=3.13',
     'tox>=3.5',
     'tox-travis>=0.11',
     'coverage>=4.5',
