@@ -177,7 +177,7 @@ class Timer(metaclass=MetaTimerProperty):
     it returns a time measured in fractional seconds. The function can contain
     arbitrary positional and/or keyword arguments or no arguments.
 
-    .. literalinclude:: ../examples/timer_example.py
+    .. literalinclude:: ../examples/example_Timer.py
         :language: python
         :linenos:
         :name: Timer_API
