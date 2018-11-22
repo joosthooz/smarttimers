@@ -53,6 +53,7 @@ class TimerException(Exception):
                        if dtype else msg_or_name
         super().__init__(self.message)
 
+
 class TimerTypeError(TimerException):
     """Exception for invalid data type assigment in :py:class:`Timer`."""
     pass
@@ -420,7 +421,7 @@ class Timer(metaclass=MetaTimerProperty):
         """
         try:
             return time.get_clock_info(self.clock_name)
-        except (TypeError, ValueError) as ex:
+        except (TypeError, ValueError):
             clock_info = {
                 'adjustable': None,
                 'implementation': type(self).CLOCKS[self.clock_name].__name__,
@@ -536,6 +537,7 @@ class Timer(metaclass=MetaTimerProperty):
         # Query map using __getitem__ property to check for valid key because
         # 'del' does not triggers __getitem__.
         dummy = cls.CLOCKS[clock_name]
+        del dummy  # to prevent warning from linting
         del cls.CLOCKS[clock_name]
 
     @classmethod

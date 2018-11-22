@@ -2,11 +2,7 @@ import unittest
 import time
 import random
 from smarttimer import Timer
-from smarttimer.timer import (TimerDict,
-                              TimerTypeError,
-                              TimerValueError,
-                              TimerKeyError,
-                              TimerCompatibilityError)
+from smarttimer.timer import TimerCompatibilityError
 
 
 class TimerInstanceOperatorsTestCase(unittest.TestCase):
@@ -20,7 +16,7 @@ class TimerInstanceOperatorsTestCase(unittest.TestCase):
         """
         cls.t1 = Timer()
         cls.t1.time()
-        time.sleep(random.randint(1,5))
+        time.sleep(random.randint(1, 5))
         cls.t2 = Timer()
         cls.t2.time()
 
@@ -84,22 +80,22 @@ class TimerInstanceOperatorsTestCase(unittest.TestCase):
         for value in [1, 1., 'clock', time, [Timer()]]:
             with self.subTest(value=value):
                 with self.assertRaises(TimerCompatibilityError):
-                    res = t2 > value
+                    t2 > value
             with self.subTest(value=value):
                 with self.assertRaises(TimerCompatibilityError):
-                    res = t2 >= value
+                    t2 >= value
             with self.subTest(value=value):
                 with self.assertRaises(TimerCompatibilityError):
-                    res = value < t2
+                    value < t2
             with self.subTest(value=value):
                 with self.assertRaises(TimerCompatibilityError):
-                    res = value <= t2
+                    value <= t2
             with self.subTest(value=value):
                 with self.assertRaises(TimerCompatibilityError):
-                    res = value != t2
+                    value != t2
             with self.subTest(value=value):
                 with self.assertRaises(TimerCompatibilityError):
-                    res = value == t2
+                    value == t2
         # Valid
         self.assertGreater(t2, t1)
         self.assertGreaterEqual(t2, t1)

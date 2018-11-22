@@ -1,11 +1,7 @@
 import unittest
-import copy
 from smarttimer import Timer
-from smarttimer.timer import (TimerDict,
-                              TimerTypeError,
-                              TimerValueError,
-                              TimerKeyError,
-                              TimerCompatibilityError)
+from smarttimer.timer import (TimerTypeError,
+                              TimerKeyError)
 
 
 class TimerInstancePropertiesTestCase(unittest.TestCase):
@@ -24,8 +20,8 @@ class TimerInstancePropertiesTestCase(unittest.TestCase):
     def test_ClockName(self):
         t = Timer()
         # Invalid
-        for clock_name in [1, 1., ['clock'], ('clock',), \
-            {'clock_name': 'clock'}]:
+        for clock_name in [1, 1., ['clock'], ('clock',),
+                           {'clock_name': 'clock'}]:
             with self.subTest(clock_name=clock_name):
                 with self.assertRaises(TimerTypeError):
                     t.clock_name = clock_name

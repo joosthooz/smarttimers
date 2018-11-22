@@ -5,8 +5,7 @@ from smarttimer import Timer
 from smarttimer.timer import (TimerDict,
                               TimerTypeError,
                               TimerValueError,
-                              TimerKeyError,
-                              TimerCompatibilityError)
+                              TimerKeyError)
 
 
 class TimerClassPropertiesTestCase(unittest.TestCase):
@@ -14,16 +13,16 @@ class TimerClassPropertiesTestCase(unittest.TestCase):
     def test_TimerDict(self):
         td1 = TimerDict()
         # Invalid
-        for value in [0, 0., 'clock', ['clock', time.clock], \
-            ('clock', time.clock)]:
+        for value in [0, 0., 'clock', ['clock', time.clock],
+                      ('clock', time.clock)]:
             with self.subTest(value=value):
                 with self.assertRaises(TimerTypeError):
                     td1.update(value)
 
     def test_DefaultClockName(self):
         # Invalid
-        for clock_name in [1, 1., ['clock'], ('clock',), \
-            {'DEFAULT_CLOCK_NAME': 'clock'}]:
+        for clock_name in [1, 1., ['clock'], ('clock',),
+                           {'DEFAULT_CLOCK_NAME': 'clock'}]:
             with self.subTest(clock_name=clock_name):
                 with self.assertRaises(TimerTypeError):
                     Timer.DEFAULT_CLOCK_NAME = clock_name
@@ -50,8 +49,8 @@ class TimerClassPropertiesTestCase(unittest.TestCase):
                     Timer.CLOCKS.update(keyval)
         # Valid
         TestStack.push(Timer.CLOCKS)
-        for keyval in [{'clock': time.clock}, \
-            TimerDict({'clock': time.clock})]:
+        for keyval in [{'clock': time.clock},
+                       TimerDict({'clock': time.clock})]:
             Timer.CLOCKS = keyval
             with self.subTest(keyval=keyval):
                 self.assertTrue(keyval.items() == Timer.CLOCKS.items())

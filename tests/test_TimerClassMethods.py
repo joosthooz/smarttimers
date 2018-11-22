@@ -2,11 +2,8 @@ import unittest
 from .utiltest import TestStack
 import time
 from smarttimer import Timer
-from smarttimer.timer import (TimerDict,
-                              TimerTypeError,
-                              TimerValueError,
-                              TimerKeyError,
-                              TimerCompatibilityError)
+from smarttimer.timer import (TimerValueError,
+                              TimerKeyError)
 
 
 class TimerClassMethodsTestCase(unittest.TestCase):
@@ -28,14 +25,14 @@ class TimerClassMethodsTestCase(unittest.TestCase):
         # Valid
         TestStack.push(Timer.CLOCKS)
         Timer.register_clock('dup_clock', time.clock)
-        self.assertTrue({'dup_clock': time.clock}.items() <= \
+        self.assertTrue({'dup_clock': time.clock}.items() <=
                         Timer.CLOCKS.items())
         Timer.CLOCKS = TestStack.pop()
 
     def test_UnregisterClock(self):
         # Invalid
-        for clock_name in [1, 1., 'dummy_clock', ['clock'], ('clock',), \
-            {'clock': time.clock}]:
+        for clock_name in [1, 1., 'dummy_clock', ['clock'], ('clock',),
+                           {'clock': time.clock}]:
             with self.subTest(clock_name=clock_name):
                 with self.assertRaises(TimerKeyError):
                     Timer.unregister_clock(clock_name)

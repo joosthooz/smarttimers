@@ -3,11 +3,13 @@ import time
 import types
 from .utiltest import TestStack
 from smarttimer import Timer
-from smarttimer.timer import (TimerDict,
-                              TimerTypeError,
-                              TimerValueError,
-                              TimerKeyError,
-                              TimerCompatibilityError)
+from smarttimer.timer import (TimerTypeError,
+                              TimerValueError)
+
+
+# Custom timing function
+def constant_time(self):
+    return 1.
 
 
 class TimerInstanceMethodsTestCase(unittest.TestCase):
@@ -96,7 +98,6 @@ class TimerInstanceMethodsTestCase(unittest.TestCase):
                 self.assertIsNotNone(value)
         # Timer with custom function, does not supports time.get_clock_info()
         TestStack.push(Timer.CLOCKS)
-        constant_time = lambda: 1.
         Timer.register_clock('constant_time', constant_time)
         t.clock_name = 'constant_time'
         info = t.get_info()
@@ -109,12 +110,12 @@ class TimerInstanceMethodsTestCase(unittest.TestCase):
 
     def test_Compatibility(self):
         TestStack.push(Timer.CLOCKS)
-        constant_time = lambda: 1.
         Timer.register_clock('constant_time', constant_time)
         t = Timer('timer1', clock_name='clock')
         # Invalid
-        for value in [0, 0., 'clock', time, \
-            Timer(clock_name='constant_time'), Timer(clock_name='time')]:
+        for value in [0, 0., 'clock', time,
+                      Timer(clock_name='constant_time'),
+                      Timer(clock_name='time')]:
             with self.subTest(value=value):
                 self.assertFalse(t.is_compatible(value))
         # Valid
