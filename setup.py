@@ -35,7 +35,9 @@ setup_requirements = [
 # for this package tests to run.
 tests_requirements = [
     'tox>=3.5',
-    'coverage>=4.5'
+    'tox-travis>=0.11',
+    'coverage>=4.5',
+    'coveralls>=1.5'
 ]
 
 # A dictionary mapping of names of "extra" features to lists of strings
@@ -74,7 +76,6 @@ setup(
         'Intended Audience :: Science/Research',
         'Operating System :: POSIX',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
@@ -83,7 +84,7 @@ setup(
         ],
     platforms=['Linux'],
     zip_safe=False,
-    python_requires='>=3.3',
+    python_requires='>=3.4',
     include_package_data=True,
     packages=find_packages(),
     install_requires=install_requirements,
