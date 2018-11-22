@@ -6,16 +6,32 @@
 HISTORY
 =======
 
+v0.6.0
+------
+
+:Date: 2018-11-22
+
+Features
+    * Timer: time values are read-only.
+    * Timer: new clear, reset, (un)register_clock methods.
+    * Timer: new custom exception classes and improved exception handling.
+    * Timer: rename sum, print_info, and print_clocks methods.
+    * Timer: complete documentation.
+    * Timer: complete test cases.
+    * Integrated tox, Travis CI, code coverage, and Read the Docs.
+    * Cleaned code adhering to flake8.
+
+
 v0.4.0
 ------
 
 :Date: 2018-11-19
 
 Features
-    * Timer: added print/get_clock_info methods.
+    * Timer: new print/get_clock_info methods.
     * Timer: improved compatibility checks.
-    * Timer: added TimerCompatibilityError exception.
-    * Timer: revised documentation.
+    * Timer: new TimerCompatibilityError exception.
+    * Timer: documentation revision.
 
 
 v0.3.0
@@ -24,12 +40,12 @@ v0.3.0
 :Date: 2018-11-18
 
 Features
-    * Timer: added an example script.
-    * Timer: added MetaTimerProperty and TimerDict for handling class variable
+    * Timer: include an example script.
+    * Timer: new MetaTimerProperty and TimerDict for handling class variable
       properties.
     * Timer: improved exception coverage.
     * Timer: improved methods for checking compatibility and print clock info.
-    * Timer: time values are cleared when clock name is changed.
+    * Timer: time values are cleared automatically when clock name is changed.
 
 
 v0.2.2
@@ -38,7 +54,7 @@ v0.2.2
 :Date: 2018-11-18
 
 Features
-    * Timer: added methods to print clock details using `time.get_clock_info`_.
+    * Timer: new methods to print clock details using `time.get_clock_info`_.
     * Timer: updated docstrings and provide usage examples.
 
 
@@ -48,8 +64,8 @@ v0.2.0
 :Date: 2018-11-17
 
 Features
-    * Timer: added methods to support add, subtract, and logical operators.
-    * Timer: added methods to check compatibility between Timers.
+    * Timer: new methods to support sum, difference, and comparison operators.
+    * Timer: new methods to check compatibility between Timers.
 
 
 v0.1.0
