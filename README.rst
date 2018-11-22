@@ -13,6 +13,7 @@
    :target: https://smarttimers.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
+|
 
 SmartTimers
 ===========
