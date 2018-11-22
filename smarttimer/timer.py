@@ -124,7 +124,8 @@ class TimerDict(dict):
     def update(self, value):
         if not isinstance(value, (dict, type(self))):
             raise TimerTypeError(type(self), [dict, type(self)])
-        super().update(value)
+        for k, v in value.items():
+            self[k] = v
 
 
 class MetaTimerProperty(type):

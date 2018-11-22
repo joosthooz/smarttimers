@@ -27,7 +27,7 @@ install_requirements = [
 # A list of strings specifying what other distributions need to be present
 # in order for this setup script to run.
 setup_requirements = [
-    'setuptools>=39.1',
+    'setuptools>=35.0',
     'wheel>=0.31'
 ]
 
@@ -38,7 +38,8 @@ tests_requirements = [
     'tox>=3.5',
     'tox-travis>=0.11',
     'coverage>=4.5',
-    'coveralls>=1.5'
+#    'coveralls>=1.5',
+    'codecov>=2.0'
 ]
 
 # A dictionary mapping of names of "extra" features to lists of strings
