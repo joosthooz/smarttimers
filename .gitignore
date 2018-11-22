@@ -3,6 +3,7 @@
 .tox/
 .pytest_cache/
 .coverage
+coverage.xml
 *.eggs/
 *.egg-info/
 **/__pycache__/

@@ -4,6 +4,9 @@
 .. image:: https://coveralls.io/repos/github/edponce/smarttimers/badge.svg?branch=master
    :target: https://coveralls.io/github/edponce/smarttimers?branch=master
 
+.. image:: https://img.shields.io/codecov/c/github/dstructs/matrix/master.svg
+   :target: https://codecov.io/github/edponce/smarttimers?branch=master
+
 .. image:: https://img.shields.io/badge/license-MIT-blue.svg
    :target: https://raw.githubusercontent.com/edponce/smarttimers
 
