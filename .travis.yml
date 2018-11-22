@@ -9,20 +9,13 @@ branches:
 
 os:
     - linux
-    - osx
 
 language: python
 python:
     - "3.4"
     - "3.5"
     - "3.6"
-
-matrix:
-    exclude:
-        - os: osx
-          python: "3.5"
-        - os: osx
-          python: "3.6"
+    - "3.7"
 
 install:
     - pip install tox-travis

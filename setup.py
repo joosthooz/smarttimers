@@ -38,7 +38,6 @@ tests_requirements = [
     'tox>=3.5',
     'tox-travis>=0.11',
     'coverage>=4.5',
-#    'coveralls>=1.5',
     'codecov>=2.0'
 ]
 

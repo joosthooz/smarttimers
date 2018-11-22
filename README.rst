@@ -2,10 +2,6 @@
    :target: https://travis-ci.org/edponce/smarttimers
    :alt: Tests Status
 
-.. .. image:: https://coveralls.io/repos/github/edponce/smarttimers/badge.svg?branch=master
-   :target: https://coveralls.io/github/edponce/smarttimers?branch=master
-   :alt: Coverage Status
-
 .. image:: https://img.shields.io/codecov/c/github/dstructs/matrix/master.svg
    :target: https://codecov.io/github/edponce/smarttimers?branch=master
    :alt: Coverage Status
@@ -16,6 +12,10 @@
 .. image:: https://readthedocs.org/projects/smarttimers/badge/?version=latest
    :target: https://smarttimers.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
+
+
+SmartTimers
+===========
 
 SmartTimers is a collection of libraries for measuring runtime of running
 processes using a simple and flexible API. Time can be measured in sequential
