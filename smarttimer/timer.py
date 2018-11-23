@@ -277,7 +277,7 @@ class Timer(metaclass=MetaTimerProperty):
             self.clock_name = kwargs.get('clock_name',
                                          type(self).DEFAULT_CLOCK_NAME)
 
-    def __repr__(self):
+    def __str__(self):
         """String representation.
 
         If :py:attr:`id` is not empty string, format is
@@ -293,9 +293,6 @@ class Timer(metaclass=MetaTimerProperty):
                                                self.id)
         else:
             return "{:.6f}, {:.6f}".format(self.seconds, self.minutes)
-
-    def __str__(self):
-        return repr(self)
 
     def __add__(self, other):
         if not self.is_compatible(other):
