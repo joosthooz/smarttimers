@@ -6,12 +6,12 @@
    :target: https://codecov.io/github/edponce/smarttimers?branch=master
    :alt: Coverage Status
 
-.. image:: https://img.shields.io/badge/license-MIT-blue.svg
-   :target: https://github.com/edponce/smarttimers/blob/master/LICENSE
-
 .. image:: https://readthedocs.org/projects/smarttimers/badge/?version=latest
    :target: https://smarttimers.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
+
+.. image:: https://img.shields.io/badge/license-MIT-blue.svg
+   :target: https://github.com/edponce/smarttimers/blob/master/LICENSE
 
 |
 
