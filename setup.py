@@ -22,6 +22,7 @@ except IOError:
 # A list of strings specifying what other distributions need to be installed
 # when this package is installed.
 install_requirements = [
+    'numpy>=1.15'
 ]
 
 # A list of strings specifying what other distributions need to be present
