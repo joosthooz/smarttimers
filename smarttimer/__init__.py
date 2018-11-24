@@ -1,14 +1,25 @@
-"""SmartTimer module."""
+"""SmartTimer module.
+
+Todo:
+    * Improve handling of imports vs special methods:
+        * Use try-except in __init__.py (not ideal)
+        * Use explicit values in setup.py and docs/conf.py
+        * Import required modules at top of setup.py and docs/conf.py
+"""
 
 
-from .timer import Timer
-from .smarttimer import SmartTimer
+# Allow ingesting this file when accessing special attributes only.
+try:
+    from .timer import Timer
+    from .smarttimer import SmartTimer
 
 
-__all__ = [
-    'Timer',
-    'SmartTimer',
-]
+    __all__ = [
+        'Timer',
+        'SmartTimer',
+    ]
+except ImportError:
+    pass
 
 
 __title__ = "SmartTimer"

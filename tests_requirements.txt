@@ -1,0 +1,4 @@
+PyYAML>=3.13
+tox>=3.5
+coverage>=4.5
+codecov>=2.0

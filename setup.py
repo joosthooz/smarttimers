@@ -21,26 +21,18 @@ except IOError:
 
 # A list of strings specifying what other distributions need to be installed
 # when this package is installed.
-install_requirements = [
-    'numpy>=1.15'
-]
+with open('install_requirements.txt') as fd:
+    install_requirements = [l.strip() for l in fd.readlines()]
 
 # A list of strings specifying what other distributions need to be present
 # in order for this setup script to run.
-setup_requirements = [
-    'setuptools>=35.0',
-    'wheel>=0.31'
-]
+with open('setup_requirements.txt') as fd:
+    setup_requirements = [l.strip() for l in fd.readlines()]
 
 # A list of strings specifying what other distributions need to be present
 # for this package tests to run.
-tests_requirements = [
-    'PyYAML>=3.13',
-    'tox>=3.5',
-    'tox-travis>=0.11',
-    'coverage>=4.5',
-    'codecov>=2.0'
-]
+with open('tests_requirements.txt') as fd:
+    tests_requirements = [l.strip() for l in fd.readlines()]
 
 # A dictionary mapping of names of "extra" features to lists of strings
 # describing those features' requirements. These requirements will not be

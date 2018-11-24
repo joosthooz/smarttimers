@@ -3,8 +3,7 @@
 """SmartTimer
 
 Classes:
-
-    SmartTimer
+    :py:class:`SmartTimer`
 """
 
 

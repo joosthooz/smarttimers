@@ -1,7 +1,7 @@
 PKGDIR  := smarttimer
 TESTDIR := tests
 PYTHON  := python3
-DOCDIR  := doc
+DOCDIR  := docs
 
 .PHONY: help wheel build clean docs
 
