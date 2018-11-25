@@ -149,7 +149,7 @@ class Timer(metaclass=MetaTimerProperty):
     """Read current time from a clock/counter.
 
     Args:
-        id (str, optional): Label identifier. Default is empty string.
+        label (str, optional): Label identifier. Default is empty string.
 
         seconds (float, optional): Time measured in fractional seconds. Default
             is 0.0.
@@ -228,7 +228,7 @@ class Timer(metaclass=MetaTimerProperty):
                 :py:class:`TimerKeyError`: If key is not a string.
                 :py:class:`TimerValueError`: If assigned item is not callable.
 
-        id (str): Label identifier.
+        label (str): Label identifier.
 
             Raises:
                 :py:class:`TimerTypeError`: If not a string.
@@ -264,8 +264,8 @@ class Timer(metaclass=MetaTimerProperty):
         'time': time.time
     })
 
-    def __init__(self, id='', **kwargs):
-        self.id = id
+    def __init__(self, label='', **kwargs):
+        self.label = label
 
         # Check if another Timer is provided for initialization
         other = kwargs.get('timer')
@@ -280,33 +280,27 @@ class Timer(metaclass=MetaTimerProperty):
     def __str__(self):
         """String representation.
 
-        If :py:attr:`id` is not empty string, format is
-        ':py:attr:`seconds`, :py:attr:`minutes`, :py:attr:`id`'. Otherwise
-        :py:attr:`id` is ignored.
-
         Returns:
-            str: Comma delimited string.
+            str: Comma delimited string (:py:attr:`seconds`,
+                :py:attr:`minutes`, :py:attr:`label`)
         """
-        if self.id:
-            return "{:.6f}, {:.6f}, {}".format(self.seconds,
-                                               self.minutes,
-                                               self.id)
-        else:
-            return "{:.6f}, {:.6f}".format(self.seconds, self.minutes)
+        return "{:.6f}, {:.6f}, {}".format(self.seconds,
+                                           self.minutes,
+                                           self.label)
 
     def __add__(self, other):
         if not self.is_compatible(other):
             raise TimerCompatibilityError
-        new_id = '+'.join(filter(None, [self.id, other.id]))
-        return Timer(new_id,
+        new_label = '+'.join(filter(None, [self.label, other.label]))
+        return Timer(new_label,
                      seconds=self.seconds + other.seconds,
                      clock_name=self.clock_name)
 
     def __sub__(self, other):
         if not self.is_compatible(other):
             raise TimerCompatibilityError
-        new_id = '-'.join(filter(None, [self.id, other.id]))
-        return Timer(new_id,
+        new_label = '-'.join(filter(None, [self.label, other.label]))
+        return Timer(new_label,
                      seconds=abs(self.seconds - other.seconds),
                      clock_name=self.clock_name)
 
@@ -339,14 +333,14 @@ class Timer(metaclass=MetaTimerProperty):
         self._minutes = seconds / 60.
 
     @property
-    def id(self):
-        return self._id
+    def label(self):
+        return self._label
 
-    @id.setter
-    def id(self, id):
-        if not isinstance(id, str):
-            raise TimerTypeError('id', str)
-        self._id = id
+    @label.setter
+    def label(self, label):
+        if not isinstance(label, str):
+            raise TimerTypeError('label', str)
+        self._label = label
 
     @property
     def seconds(self):
@@ -398,7 +392,7 @@ class Timer(metaclass=MetaTimerProperty):
 
     def reset(self):
         """Reset the clock instance to default values."""
-        self.id = ''
+        self.label = ''
         self.clock_name = type(self).DEFAULT_CLOCK_NAME
         self.clear()
 
@@ -468,8 +462,8 @@ class Timer(metaclass=MetaTimerProperty):
         """Compute the time sum of a :py:class:`Timer` pair.
 
         This method wraps the addition operator between :py:class:`Timer`
-        objects. The :py:attr:`id` of the resulting :py:class:`Timer` contains
-        a combination of *timer1* and *timer2* :py:attr:`id`. The
+        objects. The :py:attr:`label` of the resulting :py:class:`Timer` contains
+        a combination of *timer1* and *timer2* :py:attr:`label`. The
         :py:attr:`clock_name` of the resulting :py:class:`Timer` is set to the
         clock name of *timer1*.
 
@@ -490,8 +484,8 @@ class Timer(metaclass=MetaTimerProperty):
         """Compute the absolute time difference of a :py:class:`Timer` pair.
 
         This method wraps the difference operator between :py:class:`Timer`
-        objects. The :py:attr:`id` of the resulting :py:class:`Timer` contains
-        a combination of *timer1* and *timer2* :py:attr:`id`. The
+        objects. The :py:attr:`label` of the resulting :py:class:`Timer` contains
+        a combination of *timer1* and *timer2* :py:attr:`label`. The
         :py:attr:`clock_name` of the resulting :py:class:`Timer` is set to the
         clock name of *timer1*.
 

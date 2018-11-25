@@ -28,7 +28,7 @@ class TimerInstanceMethodsTestCase(unittest.TestCase):
 
     def test_InitDefault(self):
         t = Timer()
-        self.assertEqual(t.id, '')
+        self.assertEqual(t.label, '')
         self.assertEqual(t.seconds, 0.)
         self.assertEqual(t.minutes, 0.)
         self.assertEqual(t.clock_name, Timer.DEFAULT_CLOCK_NAME)
@@ -43,7 +43,7 @@ class TimerInstanceMethodsTestCase(unittest.TestCase):
             t = Timer(seconds=-1.)
         # Valid
         t = Timer('timer1', seconds=10.5, clock_name='clock')
-        self.assertEqual(t.id, 'timer1')
+        self.assertEqual(t.label, 'timer1')
         self.assertEqual(t.seconds, 10.5)
         self.assertAlmostEqual(t.minutes, 10.5 / 60.)
         self.assertEqual(t.clock_name, 'clock')
@@ -52,7 +52,7 @@ class TimerInstanceMethodsTestCase(unittest.TestCase):
         t = Timer('timer1')
         t.time()
         t2 = Timer('timer2', timer=t)
-        self.assertNotEqual(t.id, t2.id)
+        self.assertNotEqual(t.label, t2.label)
         self.assertEqual(t.seconds, t2.seconds)
         self.assertEqual(t.minutes, t2.minutes)
         self.assertEqual(t.clock_name, t2.clock_name)
@@ -60,7 +60,7 @@ class TimerInstanceMethodsTestCase(unittest.TestCase):
     def test_RecordTime(self):
         t = Timer()
         t.time()
-        self.assertEqual(t.id, '')
+        self.assertEqual(t.label, '')
         self.assertGreater(t.seconds, 0.)
         self.assertGreater(t.minutes, 0.)
         self.assertEqual(t.clock_name, Timer.DEFAULT_CLOCK_NAME)
@@ -70,7 +70,7 @@ class TimerInstanceMethodsTestCase(unittest.TestCase):
         t = Timer('timer1', clock_name='process_time')
         t.time()
         t.clear()
-        self.assertEqual(t.id, 'timer1')
+        self.assertEqual(t.label, 'timer1')
         self.assertEqual(t.seconds, 0.)
         self.assertEqual(t.minutes, 0.)
         self.assertNotEqual(t.clock_name, Timer.DEFAULT_CLOCK_NAME)
@@ -79,7 +79,7 @@ class TimerInstanceMethodsTestCase(unittest.TestCase):
         t = Timer('timer1', clock_name='process_time')
         t.time()
         t.reset()
-        self.assertEqual(t.id, '')
+        self.assertEqual(t.label, '')
         self.assertEqual(t.seconds, 0.)
         self.assertEqual(t.minutes, 0.)
         self.assertEqual(t.clock_name, Timer.DEFAULT_CLOCK_NAME)

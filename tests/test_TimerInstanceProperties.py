@@ -6,16 +6,16 @@ from smarttimer.timer import (TimerTypeError,
 
 class TimerInstancePropertiesTestCase(unittest.TestCase):
 
-    def test_ID(self):
+    def test_Label(self):
         t = Timer()
         # Invalid
-        for id in [1, 1., ['timer1'], ('timer1',), {'id': 'timer1'}]:
-            with self.subTest(id=id):
+        for label in [1, 1., ['timer1'], ('timer1',), {'label': 'timer1'}]:
+            with self.subTest(label=label):
                 with self.assertRaises(TimerTypeError):
-                    t.id = id
+                    t.label = label
         # Valid
-        t.id = 'timer1'
-        self.assertEqual(t.id, 'timer1')
+        t.label = 'timer1'
+        self.assertEqual(t.label, 'timer1')
 
     def test_ClockName(self):
         t = Timer()
