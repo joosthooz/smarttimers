@@ -12,11 +12,18 @@ Todo:
 try:
     from .timer import Timer
     from .smarttimer import SmartTimer
+    from .exceptions import (TimerException, TimerTypeError, TimerValueError,
+                             TimerKeyError, TimerCompatibilityError)
 
 
     __all__ = [
         'Timer',
         'SmartTimer',
+        'TimerException',
+        'TimerTypeError',
+        'TimerValueError',
+        'TimerKeyError',
+        'TimerCompatibilityError'
     ]
 except ImportError:
     pass
@@ -24,7 +31,7 @@ except ImportError:
 
 __title__ = "SmartTimer"
 __name__ = "SmartTimer"
-__version__ = "0.6.0"
+__version__ = "0.8.0"
 __description__ = "SmartTimer library"
 __keywords__ = [
     "time",

@@ -3,8 +3,7 @@ import time
 import types
 from .utiltest import TestStack
 from smarttimer import Timer
-from smarttimer.timer import (TimerTypeError,
-                              TimerValueError)
+from smarttimer.timer import (TimerTypeError, TimerValueError)
 
 
 # Custom timing function
