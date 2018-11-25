@@ -15,7 +15,6 @@ try:
     from .exceptions import (TimerException, TimerTypeError, TimerValueError,
                              TimerKeyError, TimerCompatibilityError)
 
-
     __all__ = [
         'Timer',
         'SmartTimer',

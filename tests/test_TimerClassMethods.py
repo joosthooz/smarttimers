@@ -23,9 +23,8 @@ class TimerClassMethodsTestCase(unittest.TestCase):
                     Timer.register_clock(*keyval)
         # Valid
         TestStack.push(Timer.CLOCKS)
-        Timer.register_clock('dup_clock', time.clock)
-        self.assertTrue({'dup_clock': time.clock}.items() <=
-                        Timer.CLOCKS.items())
+        Timer.register_clock('clock2', time.clock)
+        self.assertTrue({'clock2': time.clock}.items() <= Timer.CLOCKS.items())
         Timer.CLOCKS = TestStack.pop()
 
     def test_UnregisterClock(self):
