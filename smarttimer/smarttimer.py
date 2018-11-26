@@ -2,28 +2,25 @@
 
 Classes:
     :py:class:`SmartTimer`
-
-Todo:
-    * Add time correction for tic(), toc(), toc() , ...
 """
 
 
 from .timer import Timer
-from .exceptions import TimerTypeError
+from .exceptions import (TimerTypeError, TimerKeyError)
 
 
 __all__ = ['SmartTimer']
 
 
 class SmartTimer:
-    """Data structure for timing code blocks.
+    """Manager of :py:class:`Timer` measurements for code blocks.
 
-    Supports consecutive and nested timed regions:
-        * Consecutive timer: tic(), toc(), ..., tic(), toc()
-        * Nested timer:      tic(), tic(), ..., toc(), toc()
-        * Cascade timer:     tic(), toc(), toc(), ...
-
-    Contains time of last event and list of all events (supports indexing).
+    Supports the following schemes of timed blocks:
+        * Consecutive: tic(), toc(), ..., tic(), toc()
+        * Nested: tic(), tic(), ..., toc(), toc()
+        * Cascade: tic(), toc(), toc(), ...
+        * Nested interleaved: tic(), tic(), toc(), tic(), ..., toc(), toc()
+        * Key-paired: tic('outer'), tic('inner'), ..., toc('outer'), toc()
     """
     def __init__(self, name='smarttimer', **kwargs):
         self._name = name
@@ -91,15 +88,14 @@ class SmartTimer:
         Returns:
             list: Keys are labels and values list of time in seconds.
         """
-        time_map = {}
-        for k, v in zip(self.labels, self.seconds):
-            if k is None:
-                continue
-            if k not in time_map:
-                time_map[k] = [v]
-            else:
-                time_map[k].append(v)
-        return time_map
+        times_map = {}
+        for t in self._timers:
+            if t is not None:
+                if t.label not in times_map:
+                    times_map[t.label] = [t.seconds]
+                else:
+                    times_map[t.label].append(t.seconds)
+        return times_map
 
     def __enter__(self):
         self.tic()
@@ -119,48 +115,36 @@ class SmartTimer:
         as the given keys (except for cases where duplicate labels exist).
 
         Note:
-            * Remove from timers, not stack
-
-        Note:
             * If key is string, then consider it as a label
-            * If key is integer, then consider it as an index
-            * If key is dict, then dict.key is used as the actual key
-            * Key can be an iterable of integers and/or strings
+            * If key is integer or slice, then consider it as an index
+            * Key types can be mixed
 
         Example:
             timer[4, 2]
             timer['I/O', 'Processing']
             timer[2, 'Processing']
             timer[1:2, 4:6]
-            timer[['I/O', 'Processing'], [1,2]]
         """
-        seconds = []
-        try:
-            for key in keys:
-                # Ensure 'key' is a single level iterable to allow loop
-                # processing. When an iterable or multiple keys are passed,
-                # the arguments are automatically organized as a tuple of
-                # tuple of values ((arg1,arg2),).
-                # Handle single strings because they are iterable.
-                if not hasattr(key, '__iter__') or isinstance(key, str):
-                    key = [key]
+        # Ensure 'key' is a single level iterable to allow loop
+        # processing. When an iterable or multiple keys are passed,
+        # the arguments are automatically organized as a tuple of
+        # tuple of values ((arg1,arg2),).
+        if isinstance(keys[0], tuple):
+            keys = keys[0]
 
-                for k in key:
-                    if isinstance(k, slice):
-                        seconds.append(self.seconds[k])
-                    elif isinstance(k, int):
-                        seconds.append(self._timers[k].seconds)
-                    elif isinstance(k, str):
-                        for t in self._timers:
-                            if t is None:
-                                continue
-                            if k == t.label:
-                                seconds.append(t.seconds)
-                    else:
-                        raise KeyError('Invalid key \'{}\' for {} '
-                                       'object'.format(key, repr(self)))
-        except (IndexError, ValueError) as ex:
-            print(ex)
+        seconds = []
+        for key in keys:
+            try:
+                if isinstance(key, slice):
+                    seconds.append(self.seconds[key])
+                elif isinstance(key, int):
+                    seconds.append(self._timers[key].seconds)
+                elif isinstance(key, str):
+                    seconds.extend(self.times[key])
+                else:
+                    raise TimerTypeError(str(key), 'str, int, or slice')
+            except (IndexError, ValueError):
+                raise TimerKeyError(str(key), 'valid index')
 
         if not seconds:
             return None
@@ -168,44 +152,39 @@ class SmartTimer:
             return seconds if len(seconds) > 1 else seconds[0]
 
     def remove(self, *keys):
-        """Remove a Timer.
+        """Remove a :py:class:`Timer`.
+
         Note:
             * Remove from timers, not stack
-
-        Note:
             * If key is string, then consider it as a label
-            * If key is integer, then consider it as an index
-            * If key is dict, then dict.key is used as the actual key
-            * Key can be an iterable of integers and/or strings
+            * If key is integer or slice, then consider it as an index
+            * Key types can be mixed
         """
-        try:
-            for key in keys:
-                # Ensure 'key' is a single level iterable to allow loop
-                # processing. When an iterable or multiple keys are passed,
-                # the arguments are automatically organized as a tuple of
-                # tuple of values ((arg1,arg2),).
-                # Handle single strings because they are iterable.
-                if not hasattr(key, '__iter__') or isinstance(key, str):
-                    key = [key]
+        # Ensure 'key' is a single level iterable to allow loop
+        # processing. When an iterable or multiple keys are passed,
+        # the arguments are automatically organized as a tuple of
+        # tuple of values ((arg1,arg2),).
+        if isinstance(keys[0], tuple):
+            keys = keys[0]
 
-                for k in key:
-                    if isinstance(k, slice):
-                        for t in self._timers[key]:
-                            self._timers.remove(t)
-                    elif isinstance(k, int):
-                        self._timers.remove(self._timers[k])
-                    elif isinstance(k, str):
-                        # Need a copy of _timers because it is modified
-                        for t in self._timers[:]:
-                            if t is None:
-                                continue
-                            if k == t.label:
+        for key in keys:
+            try:
+                if isinstance(key, slice):
+                    # Slice produces a copy of _timers, original is modified
+                    for t in self._timers[key]:
+                        self._timers.remove(t)
+                elif isinstance(key, int):
+                    self._timers.remove(self._timers[key])
+                elif isinstance(key, str):
+                    # Slice produces a copy of _timers, original is modified
+                    for t in self._timers[:]:
+                        if t is not None:
+                            if key == t.label:
                                 self._timers.remove(t)
-                    else:
-                        raise KeyError('Invalid key \'{}\' for {} '
-                                       'object'.format(key, repr(self)))
-        except (IndexError, ValueError) as ex:
-            print(ex)
+                else:
+                    raise TimerTypeError(str(key), 'str, int, or slice')
+            except (IndexError, ValueError):
+                raise TimerKeyError(str(key), 'valid index')
 
     def clear(self):
         """Set time values to zero."""
@@ -217,67 +196,86 @@ class SmartTimer:
     def walltime(self):
         """Compute walltime in seconds.
 
-        Throws exception if there are active timers.
+        Only supported when all timers have completed, else error occurs.
         """
         return sum(self.seconds)
 
     def tic(self, key=''):
         """Start measuring time.
 
-        Create Timer and use as reference for _last_tic.
-        First insert Timer into stack, then measure time to minimize noise.
+        Measure time at the latest moment possible to not minimize noise from
+        internal operations.
         """
+        # Create Timer
+        # _last_tic -> timer of most recent tic
         self._last_tic = t = Timer(label=key)
+
+        # First insert Timer into stack, then record time to minimize noise.
+        # This can be done because 't' is a reference.
         self._timer_stack.append(t)
+
+        # Use 'None' as an indicator of active timers
+        self._timers.append(None)
+
+        # Record time
         t.time()
 
     def toc(self, key=None):
         """Stop measuring time.
 
-        Measure time at the soonest moment possible to not include internal
-        processing tasks.
+        Measure time at the soonest moment possible to not minimize noise from
+        internal operations.
+
+        Note:
+            * In cascade regions, that is, multiple toc() calls, some noise
+              will be introduced. There is the possibility of correcting this
+              noise, but even the correction is noise itself.
         """
-        # No-op, if no tic() has been invoked previously
+        # Record time
+        self._timer.time()
+
+        # Raise error if key is used incorrectly, not str or non-existing pair
+        if key is not None:
+            if not isinstance(key, str):
+                raise TimerTypeError(str(key), str)
+            elif not self._timer_stack:
+                raise TimerKeyError(str(key), 'matched pair')
+
+        # No-op, if no tic pair (e.g., toc() after instance creation)
         # _last_tic -> _timer
         if self._last_tic is self._timer:
             return None
 
-        # Record time
-        self._timer.time()
-
-        # There is a matching tic(), if stack is not empty
+        # Stack is not empty so there is a matching tic
         if self._timer_stack:
-            t_first = self._timer_stack.pop()
+
+            # Last item or item specified by key
+            stack_idx = -1
+
+            # Key-paired timer
+            if key is not None:
+                # Find index of last timer in stack with matching key
+                for i, t in enumerate(self._timer_stack[::-1]):
+                    if key == t.label:
+                        stack_idx = len(self._timer_stack) - i - 1
+                        break
+                else:
+                    raise TimerKeyError(str(key), 'matched pair')
+
+            # Measure time elapsed
+            t_first = self._timer_stack.pop(stack_idx)
             t_diff = self._timer - t_first
 
-            # Find index to place current timer
-            #   * Find last 'None' position
-            #   * Find last position considering completed and active timers
-            if None in self._timers:
-                idx = len(self._timers) - self._timers[::-1].index(None) - 1
-            else:
-                # tic-toc pair or inner-most from nested timers
-                idx = len(self._timers) + len(self._timer_stack)
+            # Place time in corresponding position
+            idx = [i for i, v in enumerate(self._timers)
+                   if v is None][stack_idx]
+            self._timers[idx] = t_diff
 
-            #  * For nested regions, insert 'None' in positions until index of
-            #    inner timer
-            #  * tic-toc() pair
-            if idx >= len(self._timers):
-                for k in range(len(self._timers), idx):
-                    self._timers.append(None)
-                self._timers.append(t_diff)
-
-            # Inner-most timer of nested regions
-            else:
-                self._timers[idx] = t_diff
-
-        # Empty stack
-        # _last_tic -> timer from last tic()
+        # Empty stack, use _last_tic -> timer from most recent tic
         else:
             t_diff = self._timer - self._last_tic
             self._timers.append(t_diff)
 
-        self._timer.clear()  # clear internal Timer
         return t_diff.seconds
 
     def print_info(self):
