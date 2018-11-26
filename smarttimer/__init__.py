@@ -30,7 +30,7 @@ except ImportError:
 
 __title__ = "SmartTimer"
 __name__ = "SmartTimer"
-__version__ = "0.8.0"
+__version__ = "0.8.5"
 __description__ = "SmartTimer library"
 __keywords__ = [
     "time",

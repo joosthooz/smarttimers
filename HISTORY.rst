@@ -6,6 +6,17 @@
 HISTORY
 =======
 
+v0.8.5
+------
+
+:Date: 2018-11-25
+
+Features
+    * SmartTimer: implemented container for tic-toc support.
+    * Improved module dependencies for setup, tests, and docs.
+    * Code style is compliant with flake8.
+
+
 v0.6.0
 ------
 
