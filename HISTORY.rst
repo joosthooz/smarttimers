@@ -6,6 +6,21 @@
 HISTORY
 =======
 
+v0.9.0
+------
+
+:Date: 2018-11-26
+
+Features:
+    * SmartTimer: time lists maintain ordering relative to tic() calls.
+    * SmartTimer: support for consecutive, nested, cascade, interleaved, and
+      key-paired code blocks.
+    * Improved error handling and exceptions raised.
+
+Bug fixes:
+    * SmartTimer: changed times() to use new labels() output format.
+
+
 v0.8.5
 ------
 
