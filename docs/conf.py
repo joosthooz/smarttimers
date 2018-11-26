@@ -11,7 +11,7 @@ import smarttimer as pkg
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx='1.7'  # default
+needs_sphinx='1.7'
 try:
     with open('../extras_requirements.txt') as fd:
         regex = re.compile(r'^Sphinx[<>=]+(\d+[\.?\d*]*).*[\r\n]')

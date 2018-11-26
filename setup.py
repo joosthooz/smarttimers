@@ -4,34 +4,47 @@ import smarttimer as pkg
 
 
 # Load long description from files
+long_description = ''
 try:
     with open('README.rst') as fd:
         long_description = fd.read()
-except IOError:
-    long_description = ''
+except Exception:
+    pass
 
 try:
     with open('HISTORY.rst') as fd:
         if long_description:
             long_description += '\n\n'
         long_description += fd.read()
-except IOError:
+except Exception:
     pass
 
 # A list of strings specifying what other distributions need to be installed
 # when this package is installed.
-with open('install_requirements.txt') as fd:
-    install_requirements = [l.strip() for l in fd.readlines()]
+install_requirements = []
+try:
+    with open('install_requirements.txt') as fd:
+        install_requirements = [l.strip() for l in fd.readlines()]
+except Exception:
+    pass
 
 # A list of strings specifying what other distributions need to be present
 # in order for this setup script to run.
-with open('setup_requirements.txt') as fd:
-    setup_requirements = [l.strip() for l in fd.readlines()]
+setup_requirements = []
+try:
+    with open('setup_requirements.txt') as fd:
+        setup_requirements = [l.strip() for l in fd.readlines()]
+except Exception:
+    pass
 
 # A list of strings specifying what other distributions need to be present
 # for this package tests to run.
-with open('tests_requirements.txt') as fd:
-    tests_requirements = [l.strip() for l in fd.readlines()]
+tests_requirements = []
+try:
+    with open('tests_requirements.txt') as fd:
+        tests_requirements = [l.strip() for l in fd.readlines()]
+except Exception:
+    pass
 
 # A dictionary mapping of names of "extra" features to lists of strings
 # describing those features' requirements. These requirements will not be
