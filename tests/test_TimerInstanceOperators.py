@@ -91,11 +91,9 @@ class TimerInstanceOperatorsTestCase(unittest.TestCase):
                 with self.assertRaises(TimerCompatibilityError):
                     value <= t2
             with self.subTest(value=value):
-                with self.assertRaises(TimerCompatibilityError):
-                    value != t2
+                self.assertTrue(value != t2)
             with self.subTest(value=value):
-                with self.assertRaises(TimerCompatibilityError):
-                    value == t2
+                self.assertFalse(value == t2)
         # Valid
         self.assertGreater(t2, t1)
         self.assertGreaterEqual(t2, t1)

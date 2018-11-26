@@ -266,8 +266,10 @@ class Timer(metaclass=MetaTimerProperty):
                      clock_name=self.clock_name)
 
     def __eq__(self, other):
+        # Return false if not compatible to allow index searches in Timer
+        # iterables
         if not self.is_compatible(other):
-            raise TimerCompatibilityError
+            return False
         return self.seconds == other.seconds
 
     def __lt__(self, other):
