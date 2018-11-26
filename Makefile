@@ -21,7 +21,7 @@ clean:
 	rm -rf flake8.out
 	rm -rf *.egg-info .eggs
 	rm -rf .tox
-	rm -rf coverage.xml htmlcov
+	rm -rf .coverage coverage.xml htmlcov
 	rm -rf "$(PKGDIR)/__pycache__"
 	rm -rf "$(TESTDIR)/__pycache__"
 	$(MAKE) -C $(DOCDIR) clean

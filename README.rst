@@ -2,8 +2,8 @@
    :target: https://travis-ci.org/edponce/smarttimers
    :alt: Tests Status
 
-.. image:: https://img.shields.io/codecov/c/github/dstructs/matrix/master.svg
-   :target: https://codecov.io/github/edponce/smarttimers?branch=master
+.. image:: https://codecov.io/gh/edponce/smarttimers/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/edponce/smarttimers
    :alt: Coverage Status
 
 .. image:: https://readthedocs.org/projects/smarttimers/badge/?version=latest
