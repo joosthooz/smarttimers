@@ -34,7 +34,6 @@ from .exceptions import (TimerTypeError, TimerValueError, TimerKeyError,
                          TimerCompatibilityError)
 
 
-
 __all__ = ['Timer', 'TimerDict']
 
 
@@ -67,6 +66,10 @@ class TimerDict(dict):
         return super().__getitem__(key)
 
     def update(self, tdict):
+        """Extends map with given dictionary.
+
+        Only accepts *dict* or :py:class:`TimerDict` arguments.
+        """
         if not isinstance(tdict, (dict, type(self))):
             raise TimerTypeError(type(self), [dict, type(self)])
         for k, v in tdict.items():
@@ -242,9 +245,9 @@ class Timer(metaclass=MetaTimerProperty):
             str: Comma delimited string (:py:attr:`seconds`,
                 :py:attr:`minutes`, :py:attr:`label`)
         """
-        return "{:.6f}, {:.6f}, {}".format(self.seconds,
-                                           self.minutes,
-                                           self.label)
+        return "{}, {:.6f}, {:.6f}".format(self.label,
+                                           self.seconds,
+                                           self.minutes)
 
     def __add__(self, other):
         if not self.is_compatible(other):
@@ -410,18 +413,18 @@ class Timer(metaclass=MetaTimerProperty):
         # Exception occurs when time.get_clock_info() receives an unknown clock
         try:
             return time.get_clock_info(self.clock_name) == \
-                       time.get_clock_info(other.clock_name)
+                time.get_clock_info(other.clock_name)
         except Exception:
             return type(self).CLOCKS[self.clock_name] is \
-                       type(self).CLOCKS[other.clock_name]
+                type(self).CLOCKS[other.clock_name]
 
     @classmethod
     def sum(cls, timer1, timer2):
         """Compute the time sum of a :py:class:`Timer` pair.
 
         This method wraps the addition operator between :py:class:`Timer`
-        objects. The :py:attr:`label` of the resulting :py:class:`Timer` contains
-        a combination of *timer1* and *timer2* :py:attr:`label`. The
+        objects. The :py:attr:`label` of the resulting :py:class:`Timer`
+        contains a combination of *timer1* and *timer2* :py:attr:`label`. The
         :py:attr:`clock_name` of the resulting :py:class:`Timer` is set to the
         clock name of *timer1*.
 
@@ -442,8 +445,8 @@ class Timer(metaclass=MetaTimerProperty):
         """Compute the absolute time difference of a :py:class:`Timer` pair.
 
         This method wraps the difference operator between :py:class:`Timer`
-        objects. The :py:attr:`label` of the resulting :py:class:`Timer` contains
-        a combination of *timer1* and *timer2* :py:attr:`label`. The
+        objects. The :py:attr:`label` of the resulting :py:class:`Timer`
+        contains a combination of *timer1* and *timer2* :py:attr:`label`. The
         :py:attr:`clock_name` of the resulting :py:class:`Timer` is set to the
         clock name of *timer1*.
 
