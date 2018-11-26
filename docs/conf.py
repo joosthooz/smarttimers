@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 import os
 import sys
+import re
 sys.path.append(os.path.abspath('..'))
 import smarttimer as pkg
 
@@ -12,7 +11,17 @@ import smarttimer as pkg
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '1.7'
+needs_sphinx='1.7'  # default
+try:
+    with open('../extras_requirements.txt') as fd:
+        regex = re.compile(r'^Sphinx[<>=]+(\d+[\.?\d*]*).*[\r\n]')
+        for line in fd:
+            match = regex.fullmatch(line)
+            if match:
+                needs_sphinx = match.group(1)
+                break
+except Exception:
+    pass
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -97,7 +106,7 @@ todo_include_todos = True
 # html_theme = 'nature'       # greenish theme
 # html_theme = 'pyramid'      # Pyramid web framework theme
 # html_theme = 'bizstyle'     # simple bluish theme
-html_theme = 'sphinx_rtd_theme'  # readthedocs theme
+html_theme = 'sphinx_rtd_theme'  # Read the Docs theme
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further. For a list of options available for each theme, see the

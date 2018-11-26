@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
-
 from setuptools import setup, find_packages
+import re
 import smarttimer as pkg
 
 
@@ -37,10 +36,20 @@ with open('tests_requirements.txt') as fd:
 # A dictionary mapping of names of "extra" features to lists of strings
 # describing those features' requirements. These requirements will not be
 # automatically installed unless another package depends on them.
-extras_requirements = {
-    'lint': ['flake8>=3.6'],
-    'reST': ['Sphinx>=1.7', 'sphinx_rtd_theme>=0.1.9']
-}
+extras_requirements = {}
+try:
+    regex = re.compile(r'^(.+[<>=]+\d+[\.?\d*]*)\s+\[(.+)\][\r\n]')
+    with open('extras_requirements.txt') as fd:
+        for line in fd:
+            match = regex.fullmatch(line)
+            if match:
+                value, key = match.group(1, 2)
+                if key in extras_requirements:
+                    extras_requirements[key].append(value)
+                else:
+                    extras_requirements[key] = [value]
+except Exception:
+    pass
 
 # For PyPI, the 'download_url' is a link to a hosted repository.
 # Github hosting creates tarballs for download at
@@ -63,19 +72,19 @@ setup(
     author_email=pkg.__author_email__,
     license=pkg.__license__,
     classifiers=[
-        'Development Status :: 3 - Alpha',
-        # 'Development Status :: 5 - Production/Stable',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
-        'Operating System :: POSIX',
+        'Operating System :: OS Independent',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Topic :: Documentation :: Sphinx',
-        'Topic :: Software Development :: Libraries',
-        ],
+        'Topic :: Utilities',
+        'Topic :: Software Development :: Libraries'
+    ],
     platforms=['Linux'],
     zip_safe=False,
     python_requires='>=3.4',
