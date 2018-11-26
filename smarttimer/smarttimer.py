@@ -2,6 +2,9 @@
 
 Classes:
     :py:class:`SmartTimer`
+
+Todo:
+    * Add time correction for tic(), toc(), toc() , ...
 """
 
 
@@ -26,7 +29,6 @@ class SmartTimer:
         self._name = name
         self._timers = []  # list of Timers for completed time blocks
         self._timer_stack = []  # stack of Timers for active time blocks
-#        self._timer_order = []  # list for ordering Timers based on tic()
 
         # Remove 'label', not needed for internal timer
         if 'label' in kwargs:
@@ -53,10 +55,10 @@ class SmartTimer:
         Returns:
             list: Labels of completed blocks.
         """
-        return [t.label for t in self._timers]
+        return [t.label if t else t for t in self._timers]
 
     @property
-    def labels_active(self):
+    def active_labels(self):
         """Lists of time labels for active blocks.
 
         Returns:
@@ -71,7 +73,7 @@ class SmartTimer:
         Returns:
             list: Time in seconds.
         """
-        return [t.seconds for t in self._timers]
+        return [t.seconds if t else t for t in self._timers]
 
     @property
     def minutes(self):
@@ -80,7 +82,7 @@ class SmartTimer:
         Returns:
             list: Time in minutes.
         """
-        return [t.minutes for t in self._timers]
+        return [t.minutes if t else t for t in self._timers]
 
     @property
     def times(self):
@@ -90,7 +92,9 @@ class SmartTimer:
             list: Keys are labels and values list of time in seconds.
         """
         time_map = {}
-        for k, v in zip(self.labels[0], self.seconds):
+        for k, v in zip(self.labels, self.seconds):
+            if k is None:
+                continue
             if k not in time_map:
                 time_map[k] = [v]
             else:
@@ -148,6 +152,8 @@ class SmartTimer:
                         seconds.append(self._timers[k].seconds)
                     elif isinstance(k, str):
                         for t in self._timers:
+                            if t is None:
+                                continue
                             if k == t.label:
                                 seconds.append(t.seconds)
                     else:
@@ -191,6 +197,8 @@ class SmartTimer:
                     elif isinstance(k, str):
                         # Need a copy of _timers because it is modified
                         for t in self._timers[:]:
+                            if t is None:
+                                continue
                             if k == t.label:
                                 self._timers.remove(t)
                     else:
@@ -208,6 +216,8 @@ class SmartTimer:
 
     def walltime(self):
         """Compute walltime in seconds.
+
+        Throws exception if there are active timers.
         """
         return sum(self.seconds)
 
@@ -218,7 +228,6 @@ class SmartTimer:
         First insert Timer into stack, then measure time to minimize noise.
         """
         self._last_tic = t = Timer(label=key)
-#        self._timer_order.append(t)  # temporary slot to maintain ordering
         self._timer_stack.append(t)
         t.time()
 
@@ -236,14 +245,38 @@ class SmartTimer:
         # Record time
         self._timer.time()
 
-        # No matching tic(), if stack is empty
-        # _last_tic -> timer from last tic()
+        # There is a matching tic(), if stack is not empty
         if self._timer_stack:
-            t_diff = self._timer - self._timer_stack.pop()
+            t_first = self._timer_stack.pop()
+            t_diff = self._timer - t_first
+
+            # Find index to place current timer
+            #   * Find last 'None' position
+            #   * Find last position considering completed and active timers
+            if None in self._timers:
+                idx = len(self._timers) - self._timers[::-1].index(None) - 1
+            else:
+                # tic-toc pair or inner-most from nested timers
+                idx = len(self._timers) + len(self._timer_stack)
+
+            #  * For nested regions, insert 'None' in positions until index of
+            #    inner timer
+            #  * tic-toc() pair
+            if idx >= len(self._timers):
+                for k in range(len(self._timers), idx):
+                    self._timers.append(None)
+                self._timers.append(t_diff)
+
+            # Inner-most timer of nested regions
+            else:
+                self._timers[idx] = t_diff
+
+        # Empty stack
+        # _last_tic -> timer from last tic()
         else:
             t_diff = self._timer - self._last_tic
+            self._timers.append(t_diff)
 
-        self._timers.append(t_diff)
         self._timer.clear()  # clear internal Timer
         return t_diff.seconds
 
