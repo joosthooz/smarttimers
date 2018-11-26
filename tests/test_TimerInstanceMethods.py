@@ -7,7 +7,7 @@ from smarttimer.timer import (TimerTypeError, TimerValueError)
 
 
 # Custom timing function
-def constant_time(self):
+def constant_time():
     return 1.
 
 
@@ -105,6 +105,17 @@ class TimerInstanceMethodsTestCase(unittest.TestCase):
         self.assertIsNone(info.adjustable)
         self.assertIsNone(info.monotonic)
         self.assertIsNone(info.resolution)
+        Timer.CLOCKS = TestStack.pop()
+
+    def test_RegisterClock(self):
+        TestStack.push(Timer.CLOCKS)
+        Timer.register_clock('constant_time', constant_time)
+        t = Timer()
+        t.clock_name = 'constant_time'
+        t.time()
+        self.assertEqual(t.clock_name, 'constant_time')
+        self.assertAlmostEqual(t.seconds, 1.)
+        self.assertAlmostEqual(t.minutes, 1. / 60.)
         Timer.CLOCKS = TestStack.pop()
 
     def test_Compatibility(self):
