@@ -5,8 +5,9 @@ SmartTimer Documentation
 .. toctree::
     :maxdepth: 2
 
-    main
+    premods
     modules
+    postmods
 
 
 ==================

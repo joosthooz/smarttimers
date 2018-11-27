@@ -3,7 +3,6 @@
 Classes:
     * :py:class:`Timer`
     * :py:class:`TimerDict`
-    * :py:class:`MetaTimerProperty`
 
 Todo:
     * Extend to support additional stats besides time (e.g. psutil).
