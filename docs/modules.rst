@@ -4,24 +4,24 @@ MODULES
 Timer
 -----
 
-.. automodule:: smarttimer.timer
+.. automodule:: smarttimers.timer
     :members:
 
-.. autoclass:: smarttimer.timer.TimerDict
+.. autoclass:: smarttimers.timer.TimerDict
     :no-undoc-members:
 
 
 SmartTimer
 ----------
 
-.. automodule:: smarttimer.smarttimer
+.. automodule:: smarttimers.smarttimer
     :members:
 
 
 Timer Exceptions
 ----------------
 
-.. autoclass:: smarttimer.timer.TimerTypeError
-.. autoclass:: smarttimer.timer.TimerValueError
-.. autoclass:: smarttimer.timer.TimerKeyError
-.. autoclass:: smarttimer.timer.TimerCompatibilityError
+.. autoclass:: smarttimers.timer.TimerTypeError
+.. autoclass:: smarttimers.timer.TimerValueError
+.. autoclass:: smarttimers.timer.TimerKeyError
+.. autoclass:: smarttimers.timer.TimerCompatibilityError

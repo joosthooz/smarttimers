@@ -1,9 +1,8 @@
+from smarttimers import (Timer, TimerDict, TimerKeyError, TimerTypeError,
+                         TimerValueError)
+import time
 import unittest
 from .utiltest import TestStack
-import time
-from smarttimer import Timer
-from smarttimer.timer import (TimerDict, TimerTypeError, TimerValueError,
-                              TimerKeyError)
 
 
 class TimerClassPropertiesTestCase(unittest.TestCase):

@@ -5,7 +5,7 @@ import os
 import sys
 import re
 sys.path.append(os.path.abspath('..'))
-import smarttimer as pkg
+import smarttimers as pkg
 
 
 # -- General configuration ------------------------------------------------

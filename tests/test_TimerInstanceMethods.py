@@ -1,9 +1,8 @@
-import unittest
+from smarttimers import (Timer, TimerTypeError, TimerValueError)
 import time
 import types
+import unittest
 from .utiltest import TestStack
-from smarttimer import Timer
-from smarttimer.timer import (TimerTypeError, TimerValueError)
 
 
 # Custom timing function

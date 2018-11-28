@@ -1,4 +1,4 @@
-from smarttimer import Timer
+from smarttimers import Timer
 
 # Find the current time function of a Timer
 t1 = Timer('Timer1')

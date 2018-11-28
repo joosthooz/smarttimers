@@ -5,8 +5,8 @@ Classes:
 """
 
 
-from .timer import Timer
-from .exceptions import (TimerTypeError, TimerKeyError)
+from smarttimers.exceptions import (TimerTypeError, TimerKeyError)
+from smarttimers.timer import Timer
 
 
 __all__ = ['SmartTimer']

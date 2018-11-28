@@ -1,16 +1,16 @@
 """Exceptions for timing utilities.
 
 Classes:
+    * :py:class:`TimerCompatibilityError`
     * :py:class:`TimerException`
+    * :py:class:`TimerKeyError`
     * :py:class:`TimerTypeError`
     * :py:class:`TimerValueError`
-    * :py:class:`TimerKeyError`
-    * :py:class:`TimerCompatibilityError`
 """
 
 
-__all__ = ['TimerException', 'TimerTypeError', 'TimerValueError',
-           'TimerKeyError', 'TimerCompatibilityError']
+__all__ = ['TimerCompatibilityError', 'TimerException', 'TimerKeyError',
+           'TimerTypeError', 'TimerValueError']
 
 
 class TimerException(Exception):
@@ -28,21 +28,6 @@ class TimerException(Exception):
         super().__init__(self.message)
 
 
-class TimerTypeError(TimerException):
-    """Exception for invalid data type assigment in :py:class:`Timer`."""
-    pass
-
-
-class TimerValueError(TimerException):
-    """Exception for invalid values in :py:class:`Timer`."""
-    pass
-
-
-class TimerKeyError(TimerException):
-    """Exception for invalid key indexing in :py:class:`TimerDict`."""
-    pass
-
-
 class TimerCompatibilityError(TimerException):
     """Exception for incompatible :py:class:`Timer` instances.
 
@@ -52,3 +37,18 @@ class TimerCompatibilityError(TimerException):
     def __init__(self, message=''):
         self.message = message if message else 'incompatible clocks'
         super().__init__(self.message)
+
+
+class TimerKeyError(TimerException):
+    """Exception for invalid key indexing in :py:class:`TimerDict`."""
+    pass
+
+
+class TimerTypeError(TimerException):
+    """Exception for invalid data type assigment in :py:class:`Timer`."""
+    pass
+
+
+class TimerValueError(TimerException):
+    """Exception for invalid values in :py:class:`Timer`."""
+    pass

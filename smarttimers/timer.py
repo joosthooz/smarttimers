@@ -5,9 +5,9 @@ Classes:
     * :py:class:`TimerDict`
 
 Todo:
-    * Extend to support additional stats besides time (e.g. psutil).
-    * Support timing concurrent processes, use time.thread_time() (requires
-      Python 3.7).
+    * Extend to support additional stats besides time (e.g., psutil).
+    * Integrate PAPI counters.
+    * Support timing concurrent processes (e.g., time.thread_time).
 
 .. _`time.get_clock_info`:
     https://docs.python.org/3/library/time.html#time.get_clock_info
@@ -29,8 +29,8 @@ Todo:
 
 import time
 import types
-from .exceptions import (TimerTypeError, TimerValueError, TimerKeyError,
-                         TimerCompatibilityError)
+from smarttimers.exceptions import (TimerCompatibilityError, TimerKeyError,
+                                    TimerTypeError, TimerValueError)
 
 
 __all__ = ['Timer', 'TimerDict']

@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 import re
-import smarttimer as pkg
+import smarttimers as pkg
 
 
 # Load long description from files
@@ -51,7 +51,7 @@ except Exception:
 # automatically installed unless another package depends on them.
 extras_requirements = {}
 try:
-    regex = re.compile(r'^(.+[<>=]+\d+[\.?\d*]*)\s+\[(.+)\][\r\n]')
+    regex = re.compile(r'^(.+[<>=]+\d+[\.?\d*]*)\s*\[(.+)\][\r\n]')
     with open('extras_requirements.txt') as fd:
         for line in fd:
             match = regex.fullmatch(line)
