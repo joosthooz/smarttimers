@@ -99,14 +99,13 @@ class Timer(metaclass=MetaTimerProperty):
         kwargs (dict, optional): Map of options. Valid options are
             :attr:`seconds`, :attr:`clock_name`, and :attr:`timer`.
 
-        kwargs['seconds'] (float, optional): Time measured in fractional
-            seconds. Default is 0.0.
+        seconds (float, optional): Time measured in fractional seconds. Default
+            is 0.0.
 
-        kwargs['clock_name'] (str, optional): Clock name used to select a time
+        clock_name (str, optional): Clock name used to select a time
             measurement function. Default is :attr:`DEFAULT_CLOCK_NAME`.
 
-        kwargs['timer'] (Timer, optional): Reference instance to use as
-            initialization.
+        timer (Timer, optional): Reference instance to use as initialization.
 
     A :class:`Timer` allows recording the current time measured by a
     registered timing function. Time is recorded in fractional seconds and

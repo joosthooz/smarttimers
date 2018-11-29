@@ -5,8 +5,9 @@ Classes:
 """
 
 
-from smarttimers.exceptions import (TimerException, TimerKeyError,
-                                    TimerTypeError, TimerValueError)
+from collections import defaultdict
+from smarttimers.exceptions import (TimerError, TimerKeyError, TimerTypeError,
+                                    TimerValueError)
 from smarttimers.timer import Timer
 
 
@@ -32,7 +33,7 @@ class SmartTimer:
     The following schemes are supported for timing code blocks
         * Consecutive: ``tic('A')``, ``toc()``, ..., ``tic('B')``, ``toc()``
         * Cascade: ``tic('A')``, ``toc()``, ``toc()``, ...
-        * Nested: ``tic('outer')``, ``tic('inner')``, ..., ``toc()``, ``toc()``
+        * Nested: ``tic('A')``, ``tic('B')``, ..., ``toc()``, ``toc()``
         * Label-paired: ``tic('A')``, ``tic('B')``, ..., ``toc('A')``,
           ``toc('B')``
         * Mixed: arbitrary combinations of schemes
@@ -71,7 +72,7 @@ class SmartTimer:
     """
 
     def __init__(self, name='smarttimer', **kwargs):
-        self._name = name
+        self.name = name
         self._timer = Timer(label='', **kwargs)  # internal Timer
         self._first_tic = None  # pointer used to calculate walltime
         self._last_tic = self._timer  # pointer used to support cascade scheme
@@ -108,12 +109,9 @@ class SmartTimer:
 
     @property
     def times(self):
-        times_map = {}
+        times_map = defaultdict(list)
         for t in filter(None, self._timers):
-            if t.label not in times_map:
-                times_map[t.label] = [t.seconds]
-            else:
-                times_map[t.label].append(t.seconds)
+            times_map[t.label].append(t.seconds)
         return times_map
 
     def __str__(self):
@@ -147,7 +145,6 @@ class SmartTimer:
 
         Raises:
             TimerKeyError: If keys are not string, integer, or slice.
-            TimerKeyError: If integer or slice keys are out of valid range.
         """
         # Ensure 'key' is a single level iterable to allow loop
         # processing. When an iterable or multiple keys are passed,
@@ -158,18 +155,16 @@ class SmartTimer:
 
         seconds = []
         for key in keys:
-            try:
-                if isinstance(key, str):
-                    seconds.extend(self.times[key])
-                elif isinstance(key, int):
+            if isinstance(key, str):
+                seconds.extend(self.times[key])
+            elif isinstance(key, int):
+                if key >= 0 and key < len(self._timers):
                     seconds.append(self._timers[key].seconds)
-                elif isinstance(key, slice):
-                    seconds.append(self.seconds[key])
-                else:
-                    raise TimerKeyError(str(key), "{}, {}, or {}".format(str,
-                                        int, slice))
-            except (IndexError, ValueError):
-                raise TimerKeyError(str(key), "valid index")
+            elif isinstance(key, slice):
+                seconds.append(self.seconds[key])
+            else:
+                raise TimerKeyError(str(key), "{}, {}, or {}".format(str,
+                                    int, slice))
 
         if not seconds:
             return None
@@ -202,7 +197,7 @@ class SmartTimer:
         # Use 'None' as an indicator of active code blocks
         self._timers.append(None)
 
-        # Record time
+        # Measure time
         self._last_tic.time()
 
     def toc(self, label=None):
@@ -223,16 +218,16 @@ class SmartTimer:
             float: Measured time in seconds.
 
         Raises:
-            TimerException: If there is not a matching :meth:`tic`.
+            TimerError: If there is not a matching :meth:`tic`.
             TimerTypeError: If *label* is not a string.
             TimerKeyError: If there is not a matching :meth:`tic`.
         """
         # Error if no tic pair (e.g., toc() after instance creation)
         # _last_tic -> _timer
         if self._last_tic is self._timer:
-            raise TimerException("no matched pair")
+            raise TimerError("no matched pair")
 
-        # Record time
+        # Measure time
         self._timer.time()
 
         # Stack is not empty so there is a matching tic
@@ -254,7 +249,7 @@ class SmartTimer:
                 else:
                     raise TimerKeyError(str(label), "matched pair")
 
-            # Measure time elapsed
+            # Calculate time elapsed
             t_first = self._timer_stack.pop(stack_idx)
             t_diff = self._timer - t_first
 
@@ -294,7 +289,6 @@ class SmartTimer:
 
         Raises:
             TimerKeyError: If keys are not string, integer, or slice.
-            TimerKeyError: If integer or slice keys are out of valid range.
         """
         # Ensure 'key' is a single level iterable to allow loop
         # processing. When an iterable or multiple keys are passed,
@@ -304,23 +298,21 @@ class SmartTimer:
             keys = keys[0]
 
         for key in keys:
-            try:
-                if isinstance(key, slice):
-                    # Slice produces a copy of _timers, original is modified
-                    for t in self._timers[key]:
+            if isinstance(key, str):
+                # Slice produces a copy of _timers, original is modified
+                for t in filter(None, self._timers[:]):
+                    if key == t.label:
                         self._timers.remove(t)
-                elif isinstance(key, int):
+            elif isinstance(key, int):
+                if key >= 0 and key < len(self._timers):
                     self._timers.remove(self._timers[key])
-                elif isinstance(key, str):
-                    # Slice produces a copy of _timers, original is modified
-                    for t in filter(None, self._timers[:]):
-                        if key == t.label:
-                            self._timers.remove(t)
-                else:
-                    raise TimerKeyError(str(key), "{}, {}, or {}".format(str,
-                                        int, slice))
-            except (IndexError, ValueError):
-                raise TimerKeyError(str(key), "valid index")
+            elif isinstance(key, slice):
+                # Slice produces a copy of _timers, original is modified
+                for t in self._timers[key]:
+                    self._timers.remove(t)
+            else:
+                raise TimerKeyError(str(key), "{}, {}, or {}".format(str,
+                                    int, slice))
 
     def clear(self):
         """Empty internal storage."""
@@ -361,8 +353,7 @@ class SmartTimer:
         if not fn:
             fn = self.name if '.' in self.name else self.name + ".txt"
         with open(fn, mode) as fd:
-            fd.write(", ".join(3*["{}"]).format("label",
-                                                "seconds",
-                                                "minutes"))
-            fd.write("\n")
+            fd.write(", ".join(3 * ["{}"]).format("label",
+                                                  "seconds",
+                                                  "minutes") + "\n")
             fd.write(str(self))

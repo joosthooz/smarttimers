@@ -5,7 +5,7 @@ SmartTimer
 ----------
 
 .. autoclass:: smarttimers.smarttimer.SmartTimer
-   :members:
+    :members:
 
 
 Timer
@@ -21,7 +21,8 @@ Timer
 Exceptions
 ----------
 
-.. autoclass:: smarttimers.timer.TimerCompatibilityError
-.. autoclass:: smarttimers.timer.TimerKeyError
-.. autoclass:: smarttimers.timer.TimerTypeError
-.. autoclass:: smarttimers.timer.TimerValueError
+.. autoclass:: smarttimers.exceptions.TimerCompatibilityError
+.. autoclass:: smarttimers.exceptions.TimerError
+.. autoclass:: smarttimers.exceptions.TimerKeyError
+.. autoclass:: smarttimers.exceptions.TimerTypeError
+.. autoclass:: smarttimers.exceptions.TimerValueError
