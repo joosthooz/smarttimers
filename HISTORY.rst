@@ -6,6 +6,18 @@
 HISTORY
 =======
 
+v1.0.0
+------
+
+:Date: 2018-11-29
+
+Features:
+    * SmartTimer: complete test cases.
+    * SmartTimer: consistent API behavior.
+    * Added basic documentation and example in README.
+    * Update configuration files.
+
+
 v0.9.5
 ------
 

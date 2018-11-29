@@ -10,7 +10,7 @@ Todo:
 """
 
 
-from smarttimers.exceptions import (TimerException, TimerTypeError,
+from smarttimers.exceptions import (TimerError, TimerTypeError,
                                     TimerValueError, TimerKeyError,
                                     TimerCompatibilityError)
 from smarttimers.smarttimer import SmartTimer
@@ -22,7 +22,7 @@ __all__ = [
     'Timer',
     'TimerDict',
     'TimerCompatibilityError',
-    'TimerException',
+    'TimerError',
     'TimerKeyError',
     'TimerTypeError',
     'TimerValueError'
@@ -31,12 +31,12 @@ __all__ = [
 
 __title__ = "SmartTimers"
 __name__ = "SmartTimers"
-__version__ = "0.9.5"
+__version__ = "1.0.0"
 __description__ = "SmartTimers library"
 __keywords__ = [
     "time",
     "profiling",
-    "walltime"
+    "runtime"
 ]
 __url__ = "https://github.com/edponce/smarttimers"
 __author__ = "Eduardo Ponce, The University of Tennessee, Knoxville, TN"
