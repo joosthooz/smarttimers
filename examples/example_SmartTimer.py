@@ -21,4 +21,4 @@ print(t.minutes)
 print(t.walltime())
 
 # Write times to a file
-t.write_to_file(fn="sums_of_power10.txt")
+t.write_to_file(fn="example.txt")

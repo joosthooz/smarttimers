@@ -18,13 +18,7 @@ class TimerInstanceMethodsTestCase(unittest.TestCase):
         t2 = Timer('timer2')
         print(t2)
 
-    def test_Repr(self):
-        t1 = Timer()
-        print(repr(t1))
-        t2 = Timer('timer2')
-        print(repr(t2))
-
-    def test_InitDefault(self):
+    def test_InitDefaultArgs(self):
         t = Timer()
         self.assertEqual(t.label, '')
         self.assertEqual(t.seconds, 0.)
