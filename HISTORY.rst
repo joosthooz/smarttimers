@@ -6,6 +6,22 @@
 HISTORY
 =======
 
+v0.9.5
+------
+
+:Date: 2018-11-28
+
+Features:
+    * Changed package name to smarttimers.
+    * SmartTimer: complete documentation.
+    * SmartTimer: added example.
+    * SmartTimer: improved exception handling.
+
+Bug fixes:
+    * SmartTimer: walltime is calculated from first tic until most recent toc.
+    * SmartTimer: name attribute cannot be set to empty string.
+
+
 v0.9.0
 ------
 
