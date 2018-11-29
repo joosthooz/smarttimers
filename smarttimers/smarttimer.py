@@ -117,7 +117,7 @@ class SmartTimer:
         return times_map
 
     def __str__(self):
-        return '\n'.join([t.__str__() for t in self._timers]) + '\n'
+        return '\n'.join([str(t) for t in self._timers]) + '\n'
 
     def __enter__(self):
         self.tic()
@@ -340,9 +340,10 @@ class SmartTimer:
     def write_to_file(self, fn='', mode='w'):
         """Save time contents to file.
 
-        Default behavior is to use :attr:`name`. If *fn* is provided, then it
+        Default filename is to use :attr:`name`. If *fn* is provided, then it
         will be used. The extension *.txt* is appended only if filename does
-        not already has an extension.
+        not already has an extension. Using *mode* the file can be overwritten
+        or appended with timing data.
 
         .. _`open`: https://docs.python.org/3/library/functions.html#open
 
@@ -355,9 +356,13 @@ class SmartTimer:
             *: If arguments are not valid values, exceptions from `open`_ are
                 raised.
         """
-        if not isinstance(fn):
+        if not isinstance(fn, str):
             raise TimerTypeError(str(fn), str)
         if not fn:
-            fn = self.name if '.' in self.name else self.name + '.txt'
+            fn = self.name if '.' in self.name else self.name + ".txt"
         with open(fn, mode) as fd:
+            fd.write(", ".join(3*["{}"]).format("label",
+                                                "seconds",
+                                                "minutes"))
+            fd.write("\n")
             fd.write(str(self))
