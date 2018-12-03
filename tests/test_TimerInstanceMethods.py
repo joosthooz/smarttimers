@@ -1,7 +1,7 @@
-from smarttimers import (Timer, TimerTypeError, TimerValueError)
 import time
 import types
 import unittest
+from smarttimers import (Timer, TimerTypeError, TimerValueError)
 from .utiltest import TestStack
 
 

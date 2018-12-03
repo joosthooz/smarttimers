@@ -6,16 +6,8 @@ import smarttimers as pkg
 # Load long description from files
 long_description = ""
 try:
-    with open('README.rst') as fd:
+    with open('DESCRIPTION.rst') as fd:
         long_description = fd.read()
-except Exception:
-    pass
-
-try:
-    with open('HISTORY.rst') as fd:
-        if long_description:
-            long_description += '\n\n'
-        long_description += fd.read()
 except Exception:
     pass
 

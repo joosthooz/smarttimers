@@ -17,5 +17,5 @@ exclude =
     .tox/
     build/
     dist/
-    docs/
+    doc/
     htmlcov/

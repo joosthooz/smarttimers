@@ -1,9 +1,9 @@
 PKGDIR  := smarttimers
 TESTDIR := tests
 PYTHON  := python3
-DOCDIR  := docs
+DOCDIR  := doc
 
-.PHONY: help wheel build clean docs
+.PHONY: help wheel build clean doc
 
 help:
 	@echo "Please use 'make <target>' where <target> is one of"
@@ -26,7 +26,8 @@ clean:
 	rm -rf .coverage *coverage.* htmlcov
 	rm -rf "$(PKGDIR)"/__pycache__
 	rm -rf "$(TESTDIR)"/__pycache__
+	rm -rf dist build
 	$(MAKE) -C "$(DOCDIR)" clean
 
-docs:
+doc:
 	$(MAKE) -C "$(DOCDIR)" html

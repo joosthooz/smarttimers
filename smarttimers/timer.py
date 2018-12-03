@@ -13,8 +13,8 @@ Todo:
 
 import time
 import types
-from smarttimers.exceptions import (TimerCompatibilityError, TimerKeyError,
-                                    TimerTypeError, TimerValueError)
+from .exceptions import (TimerCompatibilityError, TimerKeyError,
+                         TimerTypeError, TimerValueError)
 
 
 __all__ = ['Timer', 'TimerDict']

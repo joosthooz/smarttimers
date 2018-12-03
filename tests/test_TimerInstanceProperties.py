@@ -1,5 +1,5 @@
-from smarttimers import (Timer, TimerKeyError, TimerTypeError)
 import unittest
+from smarttimers import (Timer, TimerKeyError, TimerTypeError)
 
 
 class TimerInstancePropertiesTestCase(unittest.TestCase):

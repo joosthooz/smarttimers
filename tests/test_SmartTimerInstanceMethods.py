@@ -1,7 +1,7 @@
 import os
-from smarttimers import (SmartTimer, TimerError, TimerKeyError, TimerTypeError)
 import time
 import unittest
+from smarttimers import (SmartTimer, TimerError, TimerKeyError, TimerTypeError)
 
 
 class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
@@ -75,13 +75,14 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         time.sleep(0.5)
         t.toc()
         time.sleep(0.5)
-        t.toc()
+        t.toc('B')
         self.assertEqual(len(t.labels), 2)
         self.assertEqual(len(t.active_labels), 0)
         self.assertEqual(len(t.seconds), 2)
         self.assertEqual(len(t.minutes), 2)
-        self.assertEqual(len(t.times), 1)
+        self.assertEqual(len(t.times), 2)
         self.assertIn('A', t.times)
+        self.assertIn('B', t.times)
         self.assertEqual(t.walltime(), t.seconds[1])
 
     def test_NestedScheme(self):
@@ -136,9 +137,6 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         with self.assertRaises(TimerError):
             t.toc()
         t.tic('A')
-        with self.assertRaises(TimerKeyError):
-            t.toc('B')
-        t.toc()
         with self.assertRaises(TimerKeyError):
             t.toc('B')
 
@@ -243,6 +241,33 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         t.write_to_file(fn='', mode='w')
         t.write_to_file(fn='smarttimer.txt', mode='a')
         os.remove('smarttimer.txt')
+
+    def test_TimerStatsAll(self):
+        t = SmartTimer()
+        for i in range(5):
+            t.tic('loop' + str(i))
+            time.sleep(0.2)
+            t.toc()
+        stats = t.stats()
+        print(stats)
+        self.assertAlmostEqual(0.2, stats.min[0], 3)
+        self.assertAlmostEqual(0.2, stats.max[0], 3)
+        self.assertAlmostEqual(0.2, stats.avg[0], 3)
+
+    def test_TimerStatsSelect(self):
+        t = SmartTimer()
+        t.tic('A')
+        t.toc()
+        t.toc()
+        for i in range(5):
+            t.tic('loop' + str(i))
+            time.sleep(0.2)
+            t.toc()
+        stats = t.stats('loop')
+        print(stats)
+        self.assertAlmostEqual(0.2, stats.min[0], 3)
+        self.assertAlmostEqual(0.2, stats.max[0], 3)
+        self.assertAlmostEqual(0.2, stats.avg[0], 3)
 
 
 if __name__ == '__main__':

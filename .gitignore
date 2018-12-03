@@ -14,3 +14,4 @@ htmlcov/
 **/*.log
 flake8.out
 .pypirc
+TODO.txt

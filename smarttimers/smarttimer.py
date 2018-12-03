@@ -5,10 +5,11 @@ Classes:
 """
 
 
+import types
 from collections import defaultdict
-from smarttimers.exceptions import (TimerError, TimerKeyError, TimerTypeError,
-                                    TimerValueError)
-from smarttimers.timer import Timer
+from .exceptions import (TimerError, TimerKeyError, TimerTypeError,
+                         TimerValueError)
+from .timer import Timer
 
 
 __all__ = ['SmartTimer']
@@ -115,7 +116,7 @@ class SmartTimer:
         return times_map
 
     def __str__(self):
-        return '\n'.join([str(t) for t in self._timers]) + '\n'
+        return '\n'.join([str(t) for t in self._timers])
 
     def __enter__(self):
         self.tic()
@@ -258,10 +259,12 @@ class SmartTimer:
 
         # Empty stack, use _last_tic -> timer from most recent tic
         else:
-            if label is not None:
-                raise TimerKeyError(str(label), "matched pair")
-
             t_diff = self._timer - self._last_tic
+
+            # Use label
+            if label is not None:
+                t_diff.label = label
+
             self._timers.append(t_diff)
 
         return t_diff.seconds
@@ -352,4 +355,31 @@ class SmartTimer:
             fn = self.name if '.' in self.name else self.name + ".txt"
         with open(fn, mode) as fd:
             fd.write("{}, {}, {}\n".format("label", "seconds", "minutes"))
-            fd.write(str(self))
+            fd.write(str(self) + '\n')
+
+    def stats(self, label_substr=None):
+        """Compute a print stats.
+
+        Args:
+            label_substr (str, optional): Substring of timer labels to use. If
+                set to None then all completed timings are used.
+
+        Returns:
+            `types.SimpleNamespace`_: Namespace with stats in seconds/minutes.
+        """
+        if label_substr is None:
+            seconds = self.seconds
+            minutes = self.minutes
+        else:
+            if not isinstance(label_substr, str):
+                raise TimerTypeError(str(label_substr), str)
+            seconds = [t.seconds for t in self._timers
+                       if label_substr in t.label]
+            minutes = [t.minutes for t in self._timers
+                       if label_substr in t.label]
+
+        timer_stats = {
+            "min": (min(seconds), min(minutes)),
+            "max": (max(seconds), max(minutes)),
+            "avg": (sum(seconds) / len(seconds), sum(minutes) / len(minutes))}
+        return types.SimpleNamespace(**timer_stats)

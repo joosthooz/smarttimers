@@ -1,7 +1,7 @@
 import random
-from smarttimers import (Timer, TimerCompatibilityError)
 import time
 import unittest
+from smarttimers import (Timer, TimerCompatibilityError)
 
 
 class TimerInstanceOperatorsTestCase(unittest.TestCase):
