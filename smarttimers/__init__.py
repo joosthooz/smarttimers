@@ -16,8 +16,16 @@ from .smarttimer import SmartTimer
 from .timer import (Timer, TimerDict)
 
 
-__all__ = ['SmartTimer', 'Timer', 'TimerDict', 'TimerCompatibilityError',
-           'TimerError', 'TimerKeyError', 'TimerTypeError', 'TimerValueError']
+__all__ = [
+    'SmartTimer',
+    'Timer',
+    'TimerCompatibilityError',
+    'TimerDict',
+    'TimerError',
+    'TimerKeyError',
+    'TimerTypeError',
+    'TimerValueError'
+]
 
 
 __title__ = "SmartTimers"
