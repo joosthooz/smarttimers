@@ -4,7 +4,7 @@ import smarttimers as pkg
 
 
 # Load long description from files
-long_description = ''
+long_description = ""
 try:
     with open('README.rst') as fd:
         long_description = fd.read()
@@ -85,18 +85,18 @@ setup(
     author_email=pkg.__author_email__,
     license=pkg.__license__,
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Console',
-        'Intended Audience :: Developers',
-        'Intended Audience :: Science/Research',
-        'Operating System :: OS Independent',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Topic :: Documentation :: Sphinx',
-        'Topic :: Utilities',
-        'Topic :: Software Development :: Libraries'
+        "Development Status :: 5 - Production/Stable",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "Operating System :: OS Independent",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Topic :: Documentation :: Sphinx",
+        "Topic :: Utilities",
+        "Topic :: Software Development :: Libraries"
     ],
     platforms=['Linux'],
     zip_safe=False,
