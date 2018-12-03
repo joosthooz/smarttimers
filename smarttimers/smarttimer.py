@@ -71,9 +71,9 @@ class SmartTimer:
             :meth:`tic`.
     """
 
-    def __init__(self, name='smarttimer', **kwargs):
+    def __init__(self, name="smarttimer", **kwargs):
         self.name = name
-        self._timer = Timer(label='', **kwargs)  # internal Timer
+        self._timer = Timer(label="", **kwargs)  # internal Timer
         self._first_tic = None  # pointer used to calculate walltime
         self._last_tic = self._timer  # pointer used to support cascade scheme
         self._timers = []  # completed time blocks
@@ -171,7 +171,7 @@ class SmartTimer:
         else:
             return seconds if len(seconds) > 1 else seconds[0]
 
-    def tic(self, label=''):
+    def tic(self, label=""):
         """Start measuring time.
 
         Measure time at the latest moment possible to minimize noise from
@@ -203,9 +203,6 @@ class SmartTimer:
     def toc(self, label=None):
         """Stop measuring time at end of code block.
 
-        Measure time at the soonest moment possible to minimize noise from
-        internal operations.
-
         Note:
             In cascade regions, that is, multiple toc() calls, some noise will
             be introduced, < 2ms. There is the possibility of correcting this
@@ -227,7 +224,8 @@ class SmartTimer:
         if self._last_tic is self._timer:
             raise TimerError("no matched pair")
 
-        # Measure time
+        # Measure time at the soonest moment possible to minimize noise from
+        # internal operations.
         self._timer.time()
 
         # Stack is not empty so there is a matching tic
@@ -329,7 +327,7 @@ class SmartTimer:
         self._timer.reset()
         self.clear()
 
-    def write_to_file(self, fn='', mode='w'):
+    def write_to_file(self, fn="", mode='w'):
         """Save time contents to file.
 
         Default filename is to use :attr:`name`. If *fn* is provided, then it
@@ -353,7 +351,5 @@ class SmartTimer:
         if not fn:
             fn = self.name if '.' in self.name else self.name + ".txt"
         with open(fn, mode) as fd:
-            fd.write(", ".join(3 * ["{}"]).format("label",
-                                                  "seconds",
-                                                  "minutes") + "\n")
+            fd.write("{}, {}, {}\n".format("label", "seconds", "minutes"))
             fd.write(str(self))

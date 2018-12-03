@@ -217,17 +217,17 @@ class Timer(metaclass=MetaTimerProperty):
         https://docs.python.org/3/library/time.html#time.get_clock_info
     """
 
-    _DEFAULT_CLOCK_NAME = 'perf_counter'
+    _DEFAULT_CLOCK_NAME = "perf_counter"
 
     _CLOCKS = TimerDict({
-        'perf_counter': time.perf_counter,
-        'process_time': time.process_time,
-        'clock': time.clock,
-        'monotonic': time.monotonic,
-        'time': time.time
+        "perf_counter": time.perf_counter,
+        "process_time": time.process_time,
+        "clock": time.clock,
+        "monotonic": time.monotonic,
+        "time": time.time
     })
 
-    def __init__(self, label='', **kwargs):
+    def __init__(self, label="", **kwargs):
         self.label = label
 
         # Check if another Timer is provided for initialization
@@ -339,11 +339,7 @@ class Timer(metaclass=MetaTimerProperty):
         self._clock = type(self).CLOCKS[self._clock_name]
 
     def time(self, *args, **kwargs):
-        """Invoke time measurement function and record measured time.
-
-        Calls timing function currently configured via :attr:`clock_name`.
-        This method accepts arbitrary positional and/or keyword arguments to
-        enable support for arbitrary signatures of timing functions.
+        """Record time using timing function configured via :attr:`clock_name`.
 
         Args:
             args (tuple, optional): Positional arguments for time function.
@@ -361,16 +357,12 @@ class Timer(metaclass=MetaTimerProperty):
 
     def reset(self):
         """Clear, empty :attr:`label`, and reset clock to default value."""
-        self.label = ''
+        self.label = ""
         self.clock_name = type(self).DEFAULT_CLOCK_NAME
         self.clear()
 
     def get_info(self):
         """Return clock information.
-
-        For :attr:`clock_name` that can be queried with
-        `time.get_clock_info`_, forward the output namespace object. Otherwise
-        create and populate a namespace with the timing function.
 
         .. _`types.SimpleNamespace`:
             https://docs.python.org/3/library/types.html?highlight=types#types.SimpleNamespace
@@ -378,14 +370,17 @@ class Timer(metaclass=MetaTimerProperty):
         Returns:
             `types.SimpleNamespace`_: Namespace with clock info.
         """
+        # For :attr:`clock_name` that can be queried with
+        # `time.get_clock_info`_, forward the output namespace object.
+        # Otherwise create and populate a namespace with the timing function.
         try:
             return time.get_clock_info(self.clock_name)
         except (TypeError, ValueError):
             clock_info = {
-                'adjustable': None,
-                'implementation': type(self).CLOCKS[self.clock_name].__name__,
-                'monotonic': None,
-                'resolution': None}
+                "adjustable": None,
+                "implementation": type(self).CLOCKS[self.clock_name].__name__,
+                "monotonic": None,
+                "resolution": None}
             return types.SimpleNamespace(**clock_info)
 
     def print_info(self):
@@ -405,8 +400,7 @@ class Timer(metaclass=MetaTimerProperty):
 
         For a :attr:`clock_name` that can be queried with
         `time.get_clock_info`_, compatibility requires that all attributes are
-        identical. All other cases require that the timing functions are the
-        same function.
+        identical. Otherwise the timing functions have to be the same.
 
         Args:
             other (Timer): Second instance.
@@ -429,11 +423,8 @@ class Timer(metaclass=MetaTimerProperty):
     def sum(cls, timer1, timer2):
         """Compute the time sum of a :class:`Timer` pair.
 
-        This method wraps the addition operator between :class:`Timer`
-        objects. The :attr:`label` of the resulting :class:`Timer`
-        contains a combination of *timer1* and *timer2* :attr:`label`. The
-        :attr:`clock_name` of the resulting :class:`Timer` is set to the
-        clock name of *timer1*.
+        The :attr:`label` of the resulting :class:`Timer` contains a
+        combination of *timer1* and *timer2* :attr:`label`.
 
         Args:
             timer1 (Timer): First instance.
@@ -441,9 +432,6 @@ class Timer(metaclass=MetaTimerProperty):
 
         Returns:
             Timer: Instance containing the time sum.
-
-        Raises:
-            TimerCompatibilityError: If timers are not compatible.
         """
         return timer1 + timer2
 
@@ -451,11 +439,8 @@ class Timer(metaclass=MetaTimerProperty):
     def diff(cls, timer1, timer2):
         """Compute the absolute time difference of a :class:`Timer` pair.
 
-        This method wraps the difference operator between :class:`Timer`
-        objects. The :attr:`label` of the resulting :class:`Timer`
-        contains a combination of *timer1* and *timer2* :attr:`label`. The
-        :attr:`clock_name` of the resulting :class:`Timer` is set to the
-        clock name of *timer1*.
+        The :attr:`label` of the resulting :class:`Timer` contains a
+        combination of *timer1* and *timer2* :attr:`label`.
 
         Args:
             timer1 (Timer): First instance.
@@ -463,19 +448,12 @@ class Timer(metaclass=MetaTimerProperty):
 
         Returns:
             Timer: Instance containing the absolute time difference.
-
-        Raises:
-            TimerCompatibilityError: If timers are not compatible.
         """
         return timer1 - timer2
 
     @classmethod
     def register_clock(cls, clock_name, clock_func):
         """Registers a time function to :attr:`CLOCKS` map.
-
-        If a mapping already exists for *clock_name*, it will be updated with
-        *clock_func*. For invalid arguments, error handling is expected from
-        :attr:`CLOCKS` properties.
 
         Args:
             clock_name (str): Clock name.
@@ -487,16 +465,14 @@ class Timer(metaclass=MetaTimerProperty):
     def unregister_clock(cls, clock_name):
         """Remove a registered clock from :attr:`CLOCKS` map.
 
-        For invalid arguments, error handling is expected from
-        :attr:`CLOCKS` properties.
-
         Args:
             clock_name (str): Clock name.
         """
         # Query map using __getitem__ property to check for valid key because
         # 'del' does not triggers __getitem__.
+        # Use a dummy variable to prevent warning from linting.
         dummy = cls.CLOCKS[clock_name]
-        del dummy  # to prevent warning from linting
+        del dummy
         del cls.CLOCKS[clock_name]
 
     @classmethod

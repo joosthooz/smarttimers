@@ -10,9 +10,14 @@ Todo:
 """
 
 
-from .exceptions import *
-from .smarttimer import *
-from .timer import *
+from .exceptions import (TimerCompatibilityError, TimerError, TimerKeyError,
+                         TimerTypeError, TimerValueError)
+from .smarttimer import SmartTimer
+from .timer import (Timer, TimerDict)
+
+
+__all__ = ['SmartTimer', 'Timer', 'TimerDict', 'TimerCompatibilityError',
+           'TimerError', 'TimerKeyError', 'TimerTypeError', 'TimerValueError']
 
 
 __title__ = "SmartTimers"

@@ -22,7 +22,7 @@ class TimerError(Exception):
         msg_or_data (str, optional): Error message or data name.
         dtype (obj, str, optional): Valid data.
     """
-    def __init__(self, msg_or_name='', dtype=None):
+    def __init__(self, msg_or_name="", dtype=None):
         self.message = "{} is not a {}".format(msg_or_name, dtype) \
                        if dtype else msg_or_name
         super().__init__(self.message)
@@ -34,7 +34,7 @@ class TimerCompatibilityError(TimerError):
     Args:
         message (str, optional): Error message.
     """
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         self.message = message if message else 'incompatible clocks'
         super().__init__(self.message)
 
