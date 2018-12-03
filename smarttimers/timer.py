@@ -37,16 +37,16 @@ class TimerDict(dict):
 
     def __setitem__(self, key, value):
         if not isinstance(key, str):
-            raise TimerKeyError(str(type(self)) + "key", str)
+            raise TimerKeyError("key {}".format(key), str)
         if not callable(value):
-            raise TimerValueError(str(type(self)) + "[key]", "callable object")
+            raise TimerValueError("value {}".format(value), "callable object")
         super().__setitem__(key, value)
 
     def __getitem__(self, key):
         if not isinstance(key, str):
-            raise TimerKeyError(str(type(self)) + "key", str)
+            raise TimerKeyError("key {}".format(key), str)
         if key not in self.keys():
-            raise TimerKeyError(str(type(self)) + "[key]", "existing key")
+            raise TimerKeyError("key {}".format(key), "existing key")
         return super().__getitem__(key)
 
     def update(self, tdict):
