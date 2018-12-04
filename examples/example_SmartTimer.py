@@ -1,24 +1,32 @@
 from smarttimers import SmartTimer
 
-# Create a timing container and print clock info
-t = SmartTimer()
-t.print_info()
+# Create a timer instance named 'Example'
+t = SmartTimer("Example")
 
-# Measure a block of code
-# Sum integers for different powers of 10)
-t.tic("outer loop")
-sums = []
-for pow in range(1, 9):
-    t.tic("inner loop")
-    sums.append(sum(range(10**pow)))
+# Print clock details
+t.tic("info")
+t.print_info()
+t.toc()
+
+# Measure iterations in a loop
+t.tic("loop")
+for i in range(10):
+    t.tic("iter " + str(i))
+    sum(range(1000000))
     t.toc()
 t.toc()
 
-# Print times measured in different ways
-print(t.times)
-print(t.seconds)
-print(t.minutes)
-print(t.walltime())
+t.tic("sleep")
+t.sleep(2)
+t.toc()
 
-# Write times to a file
-t.write_to_file(fn="example.txt")
+# Write times to file 'Example.txt'
+t.to_file()
+
+print(t.times)
+print(t["info"])
+print(t.walltime())
+print(t)
+
+# Print stats only for labels with keyword 'iter'
+print(t.stats("iter"))

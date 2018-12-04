@@ -6,6 +6,23 @@
 HISTORY
 =======
 
+v1.3.0
+------
+
+:Date: 2018-12-3
+
+Features:
+    * SmartTimer: new stats() to compute total, min, max, and avg statistics.
+    * SmartTimer: label support for toc() in cascade scheme.
+    * SmartTimer: new relative and cumulative time data.
+    * SmartTimer: new to_array() to transform timing data to list/numpy array
+      (numpy is optional).
+    * Timer, SmartTimer: added sleep().
+    * README: minor update to examples.
+    * Tests: updated some cases to support SmartTimer changes.
+    * Exceptions: error messages are given explicitly when raised.
+
+
 v1.0.0
 ------
 

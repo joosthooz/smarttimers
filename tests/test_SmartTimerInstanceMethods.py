@@ -1,5 +1,4 @@
 import os
-import time
 import unittest
 from smarttimers import (SmartTimer, TimerError, TimerKeyError, TimerTypeError)
 
@@ -55,10 +54,10 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
     def test_ConsecutiveScheme(self):
         t = SmartTimer()
         t.tic('A')
-        time.sleep(0.5)
+        t.sleep(0.5)
         t.toc()
         t.tic('B')
-        time.sleep(0.5)
+        t.sleep(0.5)
         t.toc()
         self.assertEqual(len(t.labels), 2)
         self.assertEqual(len(t.active_labels), 0)
@@ -67,14 +66,14 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         self.assertEqual(len(t.times), 2)
         self.assertIn('A', t.times)
         self.assertIn('B', t.times)
-        self.assertAlmostEqual(t.walltime(), sum(t.seconds), 3)
+        self.assertAlmostEqual(t.walltime()[0], sum(t.seconds), 3)
 
     def test_CascadeScheme(self):
         t = SmartTimer()
         t.tic('A')
-        time.sleep(0.5)
+        t.sleep(0.5)
         t.toc()
-        time.sleep(0.5)
+        t.sleep(0.5)
         t.toc('B')
         self.assertEqual(len(t.labels), 2)
         self.assertEqual(len(t.active_labels), 0)
@@ -83,16 +82,16 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         self.assertEqual(len(t.times), 2)
         self.assertIn('A', t.times)
         self.assertIn('B', t.times)
-        self.assertEqual(t.walltime(), t.seconds[1])
+        self.assertEqual(t.walltime()[0], t.seconds[1])
 
     def test_NestedScheme(self):
         t = SmartTimer()
         t.tic('A')
-        time.sleep(0.5)
+        t.sleep(0.5)
         t.tic('B')
-        time.sleep(0.5)
+        t.sleep(0.5)
         t.toc()
-        time.sleep(0.5)
+        t.sleep(0.5)
         t.toc()
         self.assertEqual(len(t.labels), 2)
         self.assertEqual(len(t.active_labels), 0)
@@ -101,16 +100,16 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         self.assertEqual(len(t.times), 2)
         self.assertIn('A', t.times)
         self.assertIn('B', t.times)
-        self.assertEqual(t.walltime(), t.seconds[0])
+        self.assertEqual(t.walltime()[0], t.seconds[0])
 
     def test_LabelPairedScheme(self):
         t = SmartTimer()
         t.tic('A')
-        time.sleep(0.5)
+        t.sleep(0.5)
         t.tic('B')
-        time.sleep(0.5)
+        t.sleep(0.5)
         t.toc('A')
-        time.sleep(0.5)
+        t.sleep(0.5)
         t.toc('B')
         self.assertEqual(len(t.labels), 2)
         self.assertEqual(len(t.active_labels), 0)
@@ -123,14 +122,14 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
     def test_WithStatement(self):
         t = SmartTimer()
         with t:
-            time.sleep(1)
+            t.sleep(1)
         self.assertEqual(len(t.labels), 1)
         self.assertEqual(len(t.active_labels), 0)
         self.assertEqual(len(t.seconds), 1)
         self.assertEqual(len(t.minutes), 1)
         self.assertEqual(len(t.times), 1)
         self.assertIn('', t.times)
-        self.assertAlmostEqual(t.walltime(), t.seconds[0], 3)
+        self.assertAlmostEqual(t.walltime()[0], t.seconds[0], 3)
 
     def test_NoMatchedPair(self):
         t = SmartTimer()
@@ -236,17 +235,17 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
                    None]:
             with self.subTest(fn=fn):
                 with self.assertRaises(TimerTypeError):
-                    t.write_to_file(fn=fn)
+                    t.to_file(fn=fn)
         # Valid
-        t.write_to_file(fn='', mode='w')
-        t.write_to_file(fn='smarttimer.txt', mode='a')
+        t.to_file(fn='', mode='w')
+        t.to_file(fn='smarttimer.txt', mode='a')
         os.remove('smarttimer.txt')
 
     def test_TimerStatsAll(self):
         t = SmartTimer()
         for i in range(5):
-            t.tic('loop' + str(i))
-            time.sleep(0.2)
+            t.tic('loop ' + str(i))
+            t.sleep(0.2)
             t.toc()
         stats = t.stats()
         print(stats)
@@ -260,8 +259,8 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         t.toc()
         t.toc()
         for i in range(5):
-            t.tic('loop' + str(i))
-            time.sleep(0.2)
+            t.tic('loop ' + str(i))
+            t.sleep(0.2)
             t.toc()
         stats = t.stats('loop')
         print(stats)

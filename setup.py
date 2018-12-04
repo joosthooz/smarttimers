@@ -6,7 +6,7 @@ import smarttimers as pkg
 # Load long description from files
 long_description = ""
 try:
-    with open('DESCRIPTION.rst') as fd:
+    with open("README.rst") as fd:
         long_description = fd.read()
 except Exception:
     pass
@@ -15,7 +15,7 @@ except Exception:
 # when this package is installed.
 install_requirements = []
 try:
-    with open('install_requirements.txt') as fd:
+    with open("install_requirements.txt") as fd:
         install_requirements = [l.strip() for l in fd.readlines()]
 except Exception:
     pass
@@ -24,7 +24,7 @@ except Exception:
 # in order for this setup script to run.
 setup_requirements = []
 try:
-    with open('setup_requirements.txt') as fd:
+    with open("setup_requirements.txt") as fd:
         setup_requirements = [l.strip() for l in fd.readlines()]
 except Exception:
     pass
@@ -33,7 +33,7 @@ except Exception:
 # for this package tests to run.
 tests_requirements = []
 try:
-    with open('tests_requirements.txt') as fd:
+    with open("tests_requirements.txt") as fd:
         tests_requirements = [l.strip() for l in fd.readlines()]
 except Exception:
     pass
@@ -43,8 +43,8 @@ except Exception:
 # automatically installed unless another package depends on them.
 extras_requirements = {}
 try:
-    regex = re.compile(r'^(.+[<>=]+\d+[\.?\d*]*)\s*\[(.+)\][\r\n]')
-    with open('extras_requirements.txt') as fd:
+    regex = re.compile(r"^(.+[<>=]+\d+[\.?\d*]*)\s*\[(.+)\][\r\n]")
+    with open("extras_requirements.txt") as fd:
         for line in fd:
             match = regex.fullmatch(line)
             if match:
@@ -70,7 +70,7 @@ setup(
     long_description=long_description,
     keywords=pkg.__keywords__,
     url=pkg.__url__,
-    download_url='{}/archive/{}-{}.tar.gz'.format(pkg.__url__,
+    download_url="{}/archive/{}-{}.tar.gz".format(pkg.__url__,
                                                   pkg.__name__,
                                                   pkg.__version__),
     author=pkg.__author__,
@@ -90,14 +90,14 @@ setup(
         "Topic :: Utilities",
         "Topic :: Software Development :: Libraries"
     ],
-    platforms=['Linux'],
+    platforms=["Linux"],
     zip_safe=False,
-    python_requires='>=3.4',
+    python_requires=">=3.4",
     include_package_data=True,
     packages=find_packages(),
     install_requires=install_requirements,
     setup_requires=setup_requirements,
     extras_require=extras_requirements,
     tests_require=tests_requirements,
-    test_suite='tests'
+    test_suite="tests"
 )

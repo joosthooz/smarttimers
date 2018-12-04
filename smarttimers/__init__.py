@@ -30,8 +30,9 @@ __all__ = [
 
 __title__ = "SmartTimers"
 __name__ = "SmartTimers"
-__version__ = "1.0.0"
-__description__ = "SmartTimers library"
+__version__ = "1.3.0"
+__description__ = "Timing library with a simple and flexible API for " \
+                  "measuring a variety of consecutive and nested code blocks."
 __keywords__ = [
     "timer",
     "profiling",

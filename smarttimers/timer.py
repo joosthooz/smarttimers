@@ -37,16 +37,16 @@ class TimerDict(dict):
 
     def __setitem__(self, key, value):
         if not isinstance(key, str):
-            raise TimerKeyError("key {}".format(key), str)
+            raise TimerKeyError("key '{}' is not a {}".format(key, str))
         if not callable(value):
-            raise TimerValueError("value {}".format(value), "callable object")
+            raise TimerValueError("value '{}' is not callable".format(value))
         super().__setitem__(key, value)
 
     def __getitem__(self, key):
         if not isinstance(key, str):
-            raise TimerKeyError("key {}".format(key), str)
+            raise TimerKeyError("key '{}' is not a {}".format(key, str))
         if key not in self.keys():
-            raise TimerKeyError("key {}".format(key), "existing key")
+            raise TimerKeyError("key '{}' does not exists".format(key))
         return super().__getitem__(key)
 
     def update(self, tdict):
@@ -55,7 +55,8 @@ class TimerDict(dict):
         Only accepts *dict* or :class:`TimerDict` arguments.
         """
         if not isinstance(tdict, (dict, type(self))):
-            raise TimerTypeError(type(self), [dict, type(self)])
+            raise TimerTypeError("dict '{}' is not a {} or {}"
+                                 .format(tdict, dict, type(self)))
         for k, v in tdict.items():
             self[k] = v
 
@@ -75,7 +76,8 @@ class MetaTimerProperty(type):
     @DEFAULT_CLOCK_NAME.setter
     def DEFAULT_CLOCK_NAME(cls, value):
         if not isinstance(value, str):
-            raise TimerTypeError("DEFAULT_CLOCK_NAME", str)
+            raise TimerTypeError("'DEFAULT_CLOCK_NAME' is not a {}"
+                                 .format(str))
         cls._DEFAULT_CLOCK_NAME = value
 
     @property
@@ -85,7 +87,8 @@ class MetaTimerProperty(type):
     @CLOCKS.setter
     def CLOCKS(cls, value):
         if not isinstance(value, (dict, TimerDict)):
-            raise TimerTypeError("CLOCKS", [dict, TimerDict])
+            raise TimerTypeError("'CLOCKS' is not a {} or {}"
+                                 .format(dict, TimerDict))
         cls._CLOCKS = value if isinstance(value, TimerDict) \
             else TimerDict(value)
 
@@ -247,13 +250,12 @@ class Timer(metaclass=MetaTimerProperty):
             str: Comma delimited string (:attr:`seconds`,
                 :attr:`minutes`, :attr:`label`)
         """
-        return "{}, {:.6f}, {:.6f}".format(self.label,
-                                           self.seconds,
-                                           self.minutes)
+        return "{:>12}, {:12.6f}, {:12.6f}" \
+               .format(self.label, self.seconds, self.minutes)
 
     def __add__(self, other):
         if not self.is_compatible(other):
-            raise TimerCompatibilityError
+            raise TimerCompatibilityError("incompatible clocks")
         new_label = '+'.join(filter(None, [self.label, other.label]))
         return Timer(new_label,
                      seconds=self.seconds + other.seconds,
@@ -261,7 +263,7 @@ class Timer(metaclass=MetaTimerProperty):
 
     def __sub__(self, other):
         if not self.is_compatible(other):
-            raise TimerCompatibilityError
+            raise TimerCompatibilityError("incompatible clocks")
         new_label = '-'.join(filter(None, [self.label, other.label]))
         return Timer(new_label,
                      seconds=abs(self.seconds - other.seconds),
@@ -276,7 +278,7 @@ class Timer(metaclass=MetaTimerProperty):
 
     def __lt__(self, other):
         if not self.is_compatible(other):
-            raise TimerCompatibilityError
+            raise TimerCompatibilityError("incompatible clocks")
         return self.seconds < other.seconds
 
     def __le__(self, other):
@@ -291,9 +293,11 @@ class Timer(metaclass=MetaTimerProperty):
     def _set_time(self, seconds):
         # Do checks here because attribute is read-only
         if not isinstance(seconds, (int, float)):
-            raise TimerTypeError("seconds", float)
+            raise TimerTypeError("seconds '{}' is not a {}".format(seconds,
+                                                                   float))
         if seconds < 0.:
-            raise TimerValueError("seconds", "non-negative number")
+            raise TimerValueError("seconds '{}' is not a non-negative number"
+                                  .format(seconds))
         self._seconds = float(seconds)
         self._minutes = seconds / 60.
 
@@ -304,7 +308,7 @@ class Timer(metaclass=MetaTimerProperty):
     @label.setter
     def label(self, label):
         if not isinstance(label, str):
-            raise TimerTypeError("label", str)
+            raise TimerTypeError("label '{}' is not a {}".format(label, str))
         self._label = label
 
     @property
@@ -322,7 +326,8 @@ class Timer(metaclass=MetaTimerProperty):
     @clock_name.setter
     def clock_name(self, clock_name):
         if not isinstance(clock_name, str):
-            raise TimerTypeError("clock_name", str)
+            raise TimerTypeError("clock_name '{}' is not a {}"
+                                 .format(clock_name, str))
 
         # Clear time if new clock is incompatible with previous one. Skip
         # check if setting for the first time (e.g., __init__) to prevent
@@ -418,6 +423,10 @@ class Timer(metaclass=MetaTimerProperty):
         except Exception:
             return type(self).CLOCKS[self.clock_name] is \
                 type(self).CLOCKS[other.clock_name]
+
+    def sleep(self, seconds):
+        """Sleep for given seconds."""
+        time.sleep(seconds)
 
     @classmethod
     def sum(cls, timer1, timer2):
