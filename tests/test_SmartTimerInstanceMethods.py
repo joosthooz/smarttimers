@@ -40,13 +40,13 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         t = SmartTimer()
         t.tic('A')
         self.assertEqual(len(t.active_labels), 1)
-        self.assertEqual(len(t.labels), 1)
+        self.assertEqual(len(t.labels), 0)
         t.toc()
         self.assertEqual(len(t.active_labels), 0)
         self.assertEqual(len(t.labels), 1)
         t.tic('B')
         self.assertEqual(len(t.active_labels), 1)
-        self.assertEqual(len(t.labels), 2)
+        self.assertEqual(len(t.labels), 1)
         t.toc()
         self.assertEqual(len(t.active_labels), 0)
         self.assertEqual(len(t.labels), 2)
@@ -159,7 +159,7 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
                 with self.assertRaises(TimerKeyError):
                     t[keyval]
         # Valid, key not found
-        for keyval in [100, 'F', ('Z',)]:
+        for keyval in ['F', ('Z',)]:
             self.assertIsNone(t[keyval])
         # Valid
         self.assertEqual(t['A'], t.seconds[0])

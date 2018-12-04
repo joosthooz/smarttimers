@@ -5,13 +5,7 @@ Classes:
 """
 
 
-# Check numpy for 'to_array()'
-try:
-    import numpy
-except ImportError:
-    HAS_NUMPY = False
-else:
-    HAS_NUMPY = True
+import numpy
 import re
 import types
 from collections import defaultdict
@@ -97,7 +91,7 @@ class SmartTimer:
 
     @property
     def labels(self):
-        return [t.label if t else t for t in self._timers]
+        return [t.label for t in filter(None, self._timers)]
 
     @property
     def active_labels(self):
@@ -105,27 +99,27 @@ class SmartTimer:
 
     @property
     def seconds(self):
-        return [t.seconds if t else t for t in self._timers]
+        return [t.seconds for t in filter(None, self._timers)]
 
     @property
     def minutes(self):
-        return [t.minutes if t else t for t in self._timers]
+        return [t.minutes for t in filter(None, self._timers)]
 
     @property
     def relative_percent(self):
-        return [t.relative_percent if t else t for t in self._timers]
+        return [t.relative_percent for t in filter(None, self._timers)]
 
     @property
     def cumulative_seconds(self):
-        return [t.cumulative_seconds if t else t for t in self._timers]
+        return [t.cumulative_seconds for t in filter(None, self._timers)]
 
     @property
     def cumulative_minutes(self):
-        return [t.cumulative_minutes if t else t for t in self._timers]
+        return [t.cumulative_minutes for t in filter(None, self._timers)]
 
     @property
     def cumulative_percent(self):
-        return [t.cumulative_percent if t else t for t in self._timers]
+        return [t.cumulative_percent for t in filter(None, self._timers)]
 
     @property
     def times(self):
@@ -139,13 +133,12 @@ class SmartTimer:
                .format("label", "seconds", "minutes", "rel_percent",
                        "cumul_sec", "cumul_min",
                        "cumul_percent")
-        for t in self._timers:
-            if t:
-                data += "{:>12}, {:12.6f}, {:12.6f}, {:12.4f}, {:12.6f}, " \
-                        "{:12.6f}, {:12.4f}\n" \
-                        .format(t.label, t.seconds, t.minutes,
-                                t.relative_percent, t.cumulative_seconds,
-                                t.cumulative_minutes, t.cumulative_percent)
+        for t in filter(None, self._timers):
+            data += "{:>12}, {:12.6f}, {:12.6f}, {:12.4f}, {:12.6f}, " \
+                    "{:12.6f}, {:12.4f}\n" \
+                    .format(t.label, t.seconds, t.minutes, t.relative_percent,
+                            t.cumulative_seconds, t.cumulative_minutes,
+                            t.cumulative_percent)
         return data
 
     def __enter__(self):
@@ -183,8 +176,7 @@ class SmartTimer:
             if isinstance(key, str):
                 seconds.extend(self.times[key])
             elif isinstance(key, int):
-                if key >= 0 and key < len(self._timers):
-                    seconds.append(self._timers[key].seconds)
+                seconds.append(self._timers[key].seconds)
             elif isinstance(key, slice):
                 seconds.append(self.seconds[key])
             else:
@@ -202,7 +194,7 @@ class SmartTimer:
         Percent calculations are based on :attr:`seconds`.
         """
         total_seconds = sum(self.seconds)
-        for i, t in enumerate(self._timers):
+        for i, t in enumerate(filter(None, self._timers)):
             # Skip timers already processed, only update percentages
             if t.cumulative_seconds < 0. or t.cumulative_minutes < 0.:
                 t.cumulative_seconds = t.seconds
@@ -324,7 +316,7 @@ class SmartTimer:
             self._timers.append(t_diff)
 
         # Update cumulative and percent times when all timers have completed
-        if None not in self._timers:
+        if all(self._timers):
             self._update_cumulative_and_percent()
 
         return t_diff.seconds
@@ -335,8 +327,11 @@ class SmartTimer:
 
         :meth:`walltime` >= sum(:attr:`seconds`)
         """
-        return (self._timer.seconds - self._first_tic.seconds,
-                self._timer.minutes - self._first_tic.minutes)
+        if any(self._timers):
+            return (self._timer.seconds - self._first_tic.seconds,
+                    self._timer.minutes - self._first_tic.minutes)
+        else:
+            return (0., 0.)
 
     def print_info(self):
         """Pretty print information of registered clock."""
@@ -363,16 +358,15 @@ class SmartTimer:
 
         for key in keys:
             if isinstance(key, str):
-                # Slice produces a copy of _timers, original is modified
                 for t in filter(None, self._timers[:]):
                     if key == t.label:
                         self._timers.remove(t)
             elif isinstance(key, int):
-                if key >= 0 and key < len(self._timers):
-                    self._timers.remove(self._timers[key])
+                for i, t in enumerate(filter(None, self._timers[:])):
+                    if key == i:
+                        self._timers.remove(t)
             elif isinstance(key, slice):
-                # Slice produces a copy of _timers, original is modified
-                for t in self._timers[key]:
+                for t in list(filter(None, self._timers))[key]:
                     self._timers.remove(t)
             else:
                 raise TimerKeyError("key '{}' is not a {}, {}, or {}"
@@ -424,38 +418,62 @@ class SmartTimer:
             fd.write(data)
 
     def stats(self, label=None):
-        """Compute min, max, and average stats for timings.
+        """Compute total, min, max, and average stats for timings.
 
         Args:
-            label (str, optional): Label or subword to match timer labels to
-                select. If set to None then all completed timings are used.
+            label (str, iterable, optional): Label(s) or subword(s) to match
+                timer labels to select. If set to None then all completed
+                timings are used.
 
         Returns:
             `types.SimpleNamespace`_: Namespace with stats in seconds/minutes.
 
         Raises:
-            TimerKeyError: If *label* is not a string.
+            TimerKeyError: If *label* is not a string or iterable.
         """
         if label is None:
             seconds = self.seconds
             minutes = self.minutes
         else:
-            if not isinstance(label, str):
-                raise TimerTypeError("label '{}' is not a {}"
-                                     .format(label, str))
+            # Make strings iterable one-level higher
+            if isinstance(label, str):
+                label = [label]
 
-            # Filter data based on label
-            label_filt = re.compile(r"\b{}\b".format(label))
-            seconds = [t.seconds for t in self._timers
-                       if label_filt.search(t.label)]
-            minutes = [t.minutes for t in self._timers
-                       if label_filt.search(t.label)]
+            try:
+                seconds = []
+                minutes = []
+                selected = []
+                for l in label:
+                    if not isinstance(l, str):
+                        raise TimerTypeError("label '{}' is not a {}"
+                                             .format(l, str))
+                    label_filt = re.compile(r"\b{}\b".format(l))
+                    for t in filter(None, self._timers):
+                        if label_filt.search(t.label) and t not in selected:
+                            selected.append(t)
+                            seconds.append(t.seconds)
+                            minutes.append(t.minutes)
+            except TypeError:
+                raise TimerTypeError("label '{}' is not a {} or iterable"
+                                     .format(str))
 
-        timer_stats = {
-            "total": (sum(seconds), sum(minutes)),
-            "min": (min(seconds), min(minutes)),
-            "max": (max(seconds), max(minutes)),
-            "avg": (sum(seconds) / len(seconds), sum(minutes) / len(minutes))}
+        if seconds and minutes:
+            total_seconds = sum(seconds)
+            total_minutes = sum(minutes)
+            timer_stats = {
+                "total": (total_seconds, total_minutes),
+                "min": (min(seconds), min(minutes)),
+                "max": (max(seconds), max(minutes)),
+                "avg": (total_seconds / len(seconds),
+                        total_minutes / len(minutes))
+            }
+        else:
+            timer_stats = {
+                "total": (),
+                "min": (),
+                "max": (),
+                "avg": ()
+            }
         return types.SimpleNamespace(**timer_stats)
 
     def sleep(self, seconds):
@@ -463,7 +481,7 @@ class SmartTimer:
         self._timer.sleep(seconds)
 
     def to_array(self):
-        """Return timing data as a numpy array or list of lists (no labels).
+        """Return timing data as a numpy array (no labels).
 
         Data is arranged as a transposed view of :meth:`__str__` and
         :meth:`to_file` formats.
@@ -471,12 +489,8 @@ class SmartTimer:
         .. _`numpy.ndarray`: https://www.numpy.org/devdocs/index.html
 
         Returns:
-            `numpy.ndarray`_, list of lists: Timing data.
+            `numpy.ndarray`_: Timing data.
         """
-        data = [self.seconds, self.minutes, self.relative_percent,
-                self.cumulative_seconds, self.cumulative_minutes,
-                self.cumulative_percent]
-
-        if HAS_NUMPY:
-            data = numpy.array(data)
-        return data
+        return numpy.array([self.seconds, self.minutes, self.relative_percent,
+                            self.cumulative_seconds, self.cumulative_minutes,
+                            self.cumulative_percent])
