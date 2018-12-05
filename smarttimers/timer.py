@@ -138,9 +138,9 @@ class Timer(metaclass=MetaTimerProperty):
     Available time measurement functions in :attr:`CLOCKS`:
         * 'perf_counter' -> `time.perf_counter()`_
         * 'process_time' -> `time.process_time()`_
-        * 'clock'        -> `time.clock()`_
+        * 'clock'        -> `time.clock()`_ (deprecated)
         * 'monotonic'    -> `time.monotonic()`_
-        * 'time'         -> `time.time()`_
+        * 'time'         -> `time.time()`_ (deprecated)
 
     .. code-block:: python
         :emphasize-lines: 9,10
@@ -320,6 +320,10 @@ class Timer(metaclass=MetaTimerProperty):
         return self._minutes
 
     @property
+    def clock(self):
+        return self._clock
+
+    @property
     def clock_name(self):
         return self._clock_name
 
@@ -479,9 +483,9 @@ class Timer(metaclass=MetaTimerProperty):
         """
         # Query map using __getitem__ property to check for valid key because
         # 'del' does not triggers __getitem__.
-        # Use a dummy variable to prevent warning from linting.
-        dummy = cls.CLOCKS[clock_name]
-        del dummy
+        # Use dummy variable to prevent warning from linting.
+        _ = cls.CLOCKS[clock_name]
+        del _
         del cls.CLOCKS[clock_name]
 
     @classmethod
