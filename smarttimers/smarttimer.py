@@ -358,7 +358,8 @@ class SmartTimer:
         self._timer.clear()
         self._first_tic = None
         self._last_tic = self._timer
-        self._prof.clear()
+        if self._prof:
+            self._prof.clear()
         self._prof = None
 
     def reset(self):
@@ -490,6 +491,7 @@ class SmartTimer:
         """Stop profiling."""
         self._prof.disable()
         self._prof.create_stats()
+        self._prof.clear()
 
     def print_profile(self, sort='time'):
         """Print profiling statistics."""
