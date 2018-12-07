@@ -5,20 +5,13 @@ from smarttimers import (SmartTimer, TimerTypeError, TimerValueError)
 class SmartTimerInstancePropertiesTestCase(unittest.TestCase):
 
     def test_Name(self):
-        # Valid
         t = SmartTimer()
         t.name = 'atimer'
         self.assertEqual(t.name, 'atimer')
-        # Invalid type
         for nameval in [1, 1., ['atimer'], ('atimer',), {'atimer': 1}, None]:
             with self.subTest(nameval=nameval):
-                with self.assertRaises(TimerTypeError):
-                    t.name = nameval
-        # Invalid value
-        with self.assertRaises(TimerValueError):
-            t.name = ''
-        with self.assertRaises(TimerValueError):
-            t = SmartTimer(name='')
+                t.name = nameval
+                self.assertEqual(t.name, nameval)
 
 
 if __name__ == '__main__':

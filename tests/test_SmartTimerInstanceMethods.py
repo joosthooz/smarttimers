@@ -144,7 +144,7 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         t.tic('A')
         for keyval in [1, 1., ['A'], ('A',), {'A': 1}]:
             with self.subTest(keyval=keyval):
-                with self.assertRaises(TimerTypeError):
+                with self.assertRaises(TimerKeyError):
                     t.toc(keyval)
 
     def test_QueryKey(self):
@@ -153,14 +153,10 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         t.tic('B')
         t.toc()
         t.toc()
-        # Invalid type
-        for keyval in [1., ['A'], {'A': 1}]:
-            with self.subTest(keyval=keyval):
-                with self.assertRaises(TimerKeyError):
-                    t[keyval]
         # Valid, key not found
-        for keyval in ['F', ('Z',)]:
-            self.assertIsNone(t[keyval])
+        for keyval in [1., ['A'], {'A': 1}, 'F', ('Z',)]:
+            with self.subTest(keyval=keyval):
+                self.assertIsNone(t[keyval])
         # Valid
         self.assertEqual(t['A'], t.seconds[0])
         self.assertListEqual(t['A', 'B'], t.seconds)
@@ -182,12 +178,11 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         t.toc()
         t.toc()
         t.toc()
-        # Invalid type
+        # Invalid keys, not found
         for keyval in [1., ['A'], {'A': 1}]:
-            with self.subTest(keyval=keyval):
-                with self.assertRaises(TimerKeyError):
-                    t.remove(keyval)
-        # Valid, key not found
+            t.remove(keyval)
+        self.assertEqual(len(t.labels), 6)
+        # Valid keys, not found
         for keyval in [100, 'G', ('Z',)]:
             t.remove(keyval)
         self.assertEqual(len(t.labels), 6)
@@ -231,14 +226,16 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         t.tic('A')
         t.toc()
         # Invalid
-        for fn in [1, 1., ['smarttimer'], ('smarttimer',), {'smarttimer': 1},
-                   None]:
+        for fn in [1, 1., None]:
             with self.subTest(fn=fn):
-                with self.assertRaises(TimerTypeError):
-                    t.to_file(fn=fn)
+                with self.assertRaises(TypeError):
+                    t.dump_times(filename=fn)
+        for fn in [['smarttimer'], ('smarttimer',), {'smarttimer': 1}]:
+                with self.assertRaises(AttributeError):
+                    t.dump_times(filename=fn)
         # Valid
-        t.to_file(fn='', mode='w')
-        t.to_file(fn='smarttimer.txt', mode='a')
+        t.dump_times(filename='', mode='w')
+        t.dump_times(filename='smarttimer.txt', mode='a')
         os.remove('smarttimer.txt')
 
     def test_TimerStatsAll(self):
