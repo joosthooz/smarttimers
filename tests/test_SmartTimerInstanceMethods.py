@@ -66,7 +66,7 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         self.assertEqual(len(t.times), 2)
         self.assertIn('A', t.times)
         self.assertIn('B', t.times)
-        self.assertAlmostEqual(t.walltime()[0], sum(t.seconds), 3)
+        self.assertAlmostEqual(t.walltime()[0], sum(t.seconds), 1)
 
     def test_CascadeScheme(self):
         t = SmartTimer()
@@ -129,7 +129,7 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         self.assertEqual(len(t.minutes), 1)
         self.assertEqual(len(t.times), 1)
         self.assertIn('', t.times)
-        self.assertAlmostEqual(t.walltime()[0], t.seconds[0], 3)
+        self.assertAlmostEqual(t.walltime()[0], t.seconds[0], 1)
 
     def test_NoMatchedPair(self):
         t = SmartTimer()
@@ -242,9 +242,9 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
             t.toc()
         stats = t.stats()
         print(stats)
-        self.assertAlmostEqual(0.2, stats.min[0], 3)
-        self.assertAlmostEqual(0.2, stats.max[0], 3)
-        self.assertAlmostEqual(0.2, stats.avg[0], 3)
+        self.assertAlmostEqual(0.2, stats.min[0], 1)
+        self.assertAlmostEqual(0.2, stats.max[0], 1)
+        self.assertAlmostEqual(0.2, stats.avg[0], 1)
 
     def test_TimerStatsSelect(self):
         t = SmartTimer()
@@ -257,9 +257,9 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
             t.toc()
         stats = t.stats('loop')
         print(stats)
-        self.assertAlmostEqual(0.2, stats.min[0], 3)
-        self.assertAlmostEqual(0.2, stats.max[0], 3)
-        self.assertAlmostEqual(0.2, stats.avg[0], 3)
+        self.assertAlmostEqual(0.2, stats.min[0], 1)
+        self.assertAlmostEqual(0.2, stats.max[0], 1)
+        self.assertAlmostEqual(0.2, stats.avg[0], 1)
 
 
 if __name__ == '__main__':
