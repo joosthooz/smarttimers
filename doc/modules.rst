@@ -18,6 +18,13 @@ Timer
     :no-undoc-members:
 
 
+Decorators
+----------
+
+.. automodule:: smarttimers.decorators
+    :members:
+
+
 Exceptions
 ----------
 

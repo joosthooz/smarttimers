@@ -13,8 +13,7 @@ Todo:
 
 import time
 import types
-from .exceptions import (TimerCompatibilityError, TimerKeyError,
-                         TimerTypeError, TimerValueError)
+from .exceptions import TimerCompatibilityError
 
 
 __all__ = ['Timer', 'TimerDict']
@@ -28,34 +27,35 @@ class TimerDict(dict):
             initialization.
 
     Raises:
-        TimerTypeError: If *tdict* is not derived from dict.
-        TimerKeyError: If keys are not strings or does not exists.
-        TimerValueError: If value is not a callable object.
+        KeyError: If keys are not strings or does not exists.
+        ValueError: If value is not a callable object.
     """
     def __init__(self, tdict=dict()):
         self.update(tdict)
 
     def __setitem__(self, key, value):
         if not isinstance(key, str):
-            raise TimerKeyError("key '{}' is not a {}".format(key, str))
+            raise KeyError("key '{}' is not a {}".format(key, str))
         if not callable(value):
-            raise TimerValueError("value '{}' is not callable".format(value))
+            raise ValueError("value '{}' is not callable".format(value))
         super().__setitem__(key, value)
 
     def __getitem__(self, key):
         if not isinstance(key, str):
-            raise TimerKeyError("key '{}' is not a {}".format(key, str))
+            raise KeyError("key '{}' is not a {}".format(key, str))
         if key not in self.keys():
-            raise TimerKeyError("key '{}' does not exists".format(key))
+            raise KeyError("key '{}' does not exists".format(key))
         return super().__getitem__(key)
 
     def update(self, tdict):
         """Extends map with given dictionary.
 
         Only accepts *dict* or :class:`TimerDict` arguments.
+
+        TypeError: If *tdict* is not derived from dict.
         """
         if not isinstance(tdict, (dict, type(self))):
-            raise TimerTypeError("dict '{}' is not a {} or {}"
+            raise TypeError("dict '{}' is not a {} or {}"
                                  .format(tdict, dict, type(self)))
         for k, v in tdict.items():
             self[k] = v
@@ -67,7 +67,7 @@ class MetaTimerProperty(type):
     Requires :class:`TimerDict`.
 
     Raises:
-        TimerTypeError: If set property uses an invalid type.
+        TypeError: If set property uses an invalid type.
     """
     @property
     def DEFAULT_CLOCK_NAME(cls):
@@ -76,7 +76,7 @@ class MetaTimerProperty(type):
     @DEFAULT_CLOCK_NAME.setter
     def DEFAULT_CLOCK_NAME(cls, value):
         if not isinstance(value, str):
-            raise TimerTypeError("'DEFAULT_CLOCK_NAME' is not a {}"
+            raise TypeError("'DEFAULT_CLOCK_NAME' is not a {}"
                                  .format(str))
         cls._DEFAULT_CLOCK_NAME = value
 
@@ -87,7 +87,7 @@ class MetaTimerProperty(type):
     @CLOCKS.setter
     def CLOCKS(cls, value):
         if not isinstance(value, (dict, TimerDict)):
-            raise TimerTypeError("'CLOCKS' is not a {} or {}"
+            raise TypeError("'CLOCKS' is not a {} or {}"
                                  .format(dict, TimerDict))
         cls._CLOCKS = value if isinstance(value, TimerDict) \
             else TimerDict(value)
@@ -181,28 +181,28 @@ class Timer(metaclass=MetaTimerProperty):
             :attr:`clock_name` is empty string.
 
             Raises:
-                TimerTypeError: If not a string.
+                TypeError: If not a string.
 
         CLOCKS (:class:`TimerDict`, str -> callable): Map between clock
             name and time measurement functions.
 
             Raises:
-                TimerTypeError: If not assigned with dictionary.
-                TimerKeyError: If key is not a string.
-                TimerValueError: If assigned item is not callable.
+                TypeError: If not assigned with dictionary.
+                KeyError: If key is not a string.
+                ValueError: If assigned item is not callable.
 
         label (str): Label identifier.
 
             Raises:
-                TimerTypeError: If not a string.
+                TypeError: If not a string.
 
         seconds (float, read-only): Time measured in fractional seconds.
 
             Set internally either during initialization or when recording time.
 
             Raises:
-                TimerTypeError: If not numeric.
-                TimerValueError: If negative number.
+                TypeError: If not numeric.
+                ValueError: If negative number.
 
         minutes (float, read-only): Time measured in minutes.
 
@@ -214,7 +214,7 @@ class Timer(metaclass=MetaTimerProperty):
             An instance is reset when set to a new and incompatible clock name.
 
             Raises:
-                TimerTypeError: If not a string.
+                TypeError: If not a string.
 
     .. _`time.get_clock_info`:
         https://docs.python.org/3/library/time.html#time.get_clock_info
@@ -293,10 +293,10 @@ class Timer(metaclass=MetaTimerProperty):
     def _set_time(self, seconds):
         # Do checks here because attribute is read-only
         if not isinstance(seconds, (int, float)):
-            raise TimerTypeError("seconds '{}' is not a {}".format(seconds,
+            raise TypeError("seconds '{}' is not a {}".format(seconds,
                                                                    float))
         if seconds < 0.:
-            raise TimerValueError("seconds '{}' is not a non-negative number"
+            raise ValueError("seconds '{}' is not a non-negative number"
                                   .format(seconds))
         self._seconds = float(seconds)
         self._minutes = seconds / 60.
@@ -308,7 +308,7 @@ class Timer(metaclass=MetaTimerProperty):
     @label.setter
     def label(self, label):
         if not isinstance(label, str):
-            raise TimerTypeError("label '{}' is not a {}".format(label, str))
+            raise TypeError("label '{}' is not a {}".format(label, str))
         self._label = label
 
     @property
@@ -330,7 +330,7 @@ class Timer(metaclass=MetaTimerProperty):
     @clock_name.setter
     def clock_name(self, clock_name):
         if not isinstance(clock_name, str):
-            raise TimerTypeError("clock_name '{}' is not a {}"
+            raise TypeError("clock_name '{}' is not a {}"
                                  .format(clock_name, str))
 
         # Clear time if new clock is incompatible with previous one. Skip

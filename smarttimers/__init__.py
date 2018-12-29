@@ -10,21 +10,20 @@ Todo:
 """
 
 
-from .exceptions import (TimerCompatibilityError, TimerError, TimerKeyError,
-                         TimerTypeError, TimerValueError)
+from .exceptions import (TimerCompatibilityError, TimerError)
 from .smarttimer import SmartTimer
 from .timer import (Timer, TimerDict)
+from .decorators import (_timer, time)
 
 
 __all__ = [
+    '_timer',
+    'time',
     'SmartTimer',
     'Timer',
     'TimerCompatibilityError',
     'TimerDict',
-    'TimerError',
-    'TimerKeyError',
-    'TimerTypeError',
-    'TimerValueError'
+    'TimerError'
 ]
 
 

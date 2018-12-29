@@ -12,12 +12,13 @@ except ImportError:
     HAS_NUMPY = False
 else:
     HAS_NUMPY = True
+from functools import (partial, wraps)
 import os
 import re
 import signal
 import types
 from collections import defaultdict
-from .exceptions import (TimerError, TimerKeyError)
+from .exceptions import TimerError
 from .timer import Timer
 
 
@@ -130,16 +131,19 @@ class SmartTimer:
         return times_map
 
     def __str__(self):
-        data = "{:>12}, {:>12}, {:>12}, {:>12}, {:>12}, {:>12}, {:>12}\n" \
-               .format("label", "seconds", "minutes", "rel_percent",
-                       "cum_sec", "cum_min",
-                       "cum_percent")
+        labels = self.labels
+        label_width = max(12, max(map(len, labels)) + 1) if labels else 12
+        fmt_h = "{:>" + str(label_width) + "} {:>12} {:>12} " \
+                "{:>12} {:>12} {:>12} {:>12}\n"
+        fmt_d = "{:>" + str(label_width) + "} {:12.6f} {:12.6f} " \
+                "{:12.4f} {:12.6f} {:12.6f} {:12.4f}\n"
+
+        data = fmt_h.format("label", "seconds", "minutes",
+                            "rel_percent", "cum_sec", "cum_min", "cum_percent")
         for t in filter(None, self._timers):
-            data += "{:>12}, {:12.6f}, {:12.6f}, {:12.4f}, {:12.6f}, " \
-                    "{:12.6f}, {:12.4f}\n" \
-                    .format(t.label, t.seconds, t.minutes, t.relative_percent,
-                            t.cumulative_seconds, t.cumulative_minutes,
-                            t.cumulative_percent)
+            data += fmt_d.format(t.label, t.seconds, t.minutes,
+                                 t.relative_percent, t.cumulative_seconds,
+                                 t.cumulative_minutes, t.cumulative_percent)
         return data
 
     def __enter__(self):
@@ -241,7 +245,7 @@ class SmartTimer:
             float: Measured time in seconds.
 
         Raises:
-            TimerError, TimerKeyError: If there is not a matching :meth:`tic`.
+            TimerError, KeyError: If there is not a matching :meth:`tic`.
         """
         # Error if no tic pair (e.g., toc() after instance creation)
         # _last_tic -> _timer
@@ -266,7 +270,7 @@ class SmartTimer:
                         stack_idx = len(self._timer_stack) - i - 1
                         break
                 else:
-                    raise TimerKeyError("label '{}' has no matching label"
+                    raise KeyError("label '{}' has no matching label"
                                         .format(label))
 
             # Calculate time elapsed
