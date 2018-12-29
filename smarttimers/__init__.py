@@ -2,7 +2,7 @@
 
 Todo:
     Improve handling of module imports vs special attributes if using
-    non-standard libraries. Currently applicable when runnign tox environments
+    non-standard libraries. Currently applicable when running tox environments
     that do not include the install_requirements.txt:
         * Use try-except in __init__.py (bad hack)
         * Use explicit values in setup.py and doc/conf.py
@@ -10,20 +10,20 @@ Todo:
 """
 
 
-from .exceptions import (TimerCompatibilityError, TimerError)
-from .smarttimer import SmartTimer
-from .timer import (Timer, TimerDict)
+from .exceptions import (TimerError, TimerCompatibilityError)
 from .decorators import (_timer, time)
+from .timer import (Timer, TimerDict)
+from .smarttimer import SmartTimer
 
 
 __all__ = [
     '_timer',
     'time',
-    'SmartTimer',
     'Timer',
+    'TimerError'
     'TimerCompatibilityError',
     'TimerDict',
-    'TimerError'
+    'SmartTimer',
 ]
 
 

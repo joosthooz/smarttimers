@@ -1,6 +1,6 @@
 import os
 import unittest
-from smarttimers import (SmartTimer, TimerError, TimerKeyError, TimerTypeError)
+from smarttimers import (SmartTimer, TimerError)
 
 
 class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
@@ -136,7 +136,7 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         with self.assertRaises(TimerError):
             t.toc()
         t.tic('A')
-        with self.assertRaises(TimerKeyError):
+        with self.assertRaises(KeyError):
             t.toc('B')
 
     def test_InvalidTocKey(self):
@@ -144,7 +144,7 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         t.tic('A')
         for keyval in [1, 1., ['A'], ('A',), {'A': 1}]:
             with self.subTest(keyval=keyval):
-                with self.assertRaises(TimerKeyError):
+                with self.assertRaises(KeyError):
                     t.toc(keyval)
 
     def test_QueryKey(self):
@@ -226,11 +226,7 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         t.tic('A')
         t.toc()
         # Invalid
-        for fn in [1, 1., None]:
-            with self.subTest(fn=fn):
-                with self.assertRaises(TypeError):
-                    t.dump_times(filename=fn)
-        for fn in [['smarttimer'], ('smarttimer',), {'smarttimer': 1}]:
+        for fn in [1, 1., ['smarttimer'], ('smarttimer',), {'smarttimer': 1}]:
                 with self.assertRaises(AttributeError):
                     t.dump_times(filename=fn)
         # Valid

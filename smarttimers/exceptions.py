@@ -1,12 +1,12 @@
 """SmartTimers custom exceptions.
 
 Classes:
-    * :py:class:`TimerCompatibilityError`
     * :py:class:`TimerError`
+    * :py:class:`TimerCompatibilityError`
 """
 
 
-__all__ = ['TimerCompatibilityError', 'TimerError']
+__all__ = ['TimerError', 'TimerCompatibilityError']
 
 
 class TimerError(Exception):
@@ -16,4 +16,5 @@ class TimerError(Exception):
 
 class TimerCompatibilityError(TimerError):
     """Exception for incompatible :py:class:`Timer` instances."""
-    pass
+    def __init__(self, msg="incompatible clocks"):
+        super().__init__(msg)

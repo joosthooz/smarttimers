@@ -51,28 +51,6 @@ class TimerInstanceOperatorsTestCase(unittest.TestCase):
         self.assertAlmostEqual(t3.minutes, abs(t1.seconds - t2.seconds) / 60.)
         self.assertEqual(t3, t4)
 
-    def test_TimerSum(self):
-        t1, t2 = type(self).t1, type(self).t2
-        # Valid
-        t3 = Timer.sum(t1, t2)
-        t4 = Timer.sum(t2, t1)
-        self.assertIsInstance(t3, Timer)
-        self.assertNotEqual(t3, t2)
-        self.assertAlmostEqual(t3.seconds, t1.seconds + t2.seconds)
-        self.assertAlmostEqual(t3.minutes, (t1.seconds + t2.seconds) / 60.)
-        self.assertEqual(t3, t4)
-
-    def test_TimerDiff(self):
-        t1, t2 = type(self).t1, type(self).t2
-        # Valid
-        t3 = Timer.diff(t1, t2)
-        t4 = Timer.diff(t2, t1)
-        self.assertIsInstance(t3, Timer)
-        self.assertNotEqual(t3, t2)
-        self.assertAlmostEqual(t3.seconds, abs(t1.seconds - t2.seconds))
-        self.assertAlmostEqual(t3.minutes, abs(t1.seconds - t2.seconds) / 60.)
-        self.assertEqual(t3, t4)
-
     def test_Comparison(self):
         t1, t2 = type(self).t1, type(self).t2
         # Invalid

@@ -5,6 +5,9 @@ Classes:
 """
 
 
+__all__ = ['SmartTimer']
+
+
 import cProfile
 try:
     import numpy
@@ -22,15 +25,11 @@ from .exceptions import TimerError
 from .timer import Timer
 
 
-__all__ = ['SmartTimer']
-
-
 class SmartTimer:
     """`Timer`_ container to perform time measurements in code blocks.
 
     Args:
         name (str, optional): Name of container. Default is *smarttimer*.
-
         kwargs (dict, optional): Map of options to configure the internal
             `Timer`_. Default is `Timer`_ defaults.
 
@@ -53,21 +52,16 @@ class SmartTimer:
         name (str): Name of container. May be used for filename in
             :meth:`write_to_file`.
 
-        labels (list, str, read-only): Label identifiers of completed timed
-            code blocks.
+        labels (list, str): Label identifiers of completed timed code blocks.
 
-        active_labels (list, str, read-only): Label identifiers of active code
-            blocks.
+        active_labels (list, str): Label identifiers of active code blocks.
 
-        seconds (list, float, read-only): Elapsed time in seconds for
-            completed code blocks.
+        seconds (list, float): Elapsed time for completed code blocks.
 
-        minutes (list, float, read-only): Elapsed time in minutes for
-            completed code blocks.
+        minutes (list, float): Elapsed time for completed code blocks.
 
-        times (dict, str -> float, read-only): Map of times elapsed for
-            completed blocks. Keys are the labels used when invoking
-            :meth:`tic`.
+        times (dict): Map of times elapsed for completed blocks. Keys are the
+            labels used when invoking :meth:`tic`.
     """
 
     def __init__(self, name="", **kwargs):
@@ -131,15 +125,13 @@ class SmartTimer:
         return times_map
 
     def __str__(self):
-        labels = self.labels
-        label_width = max(12, max(map(len, labels)) + 1) if labels else 12
-        fmt_h = "{:>" + str(label_width) + "} {:>12} {:>12} " \
-                "{:>12} {:>12} {:>12} {:>12}\n"
-        fmt_d = "{:>" + str(label_width) + "} {:12.6f} {:12.6f} " \
-                "{:12.4f} {:12.6f} {:12.6f} {:12.4f}\n"
+        # len('label') = 5
+        lw = max(5, max(map(len, self.labels))) if self.labels else 5
+        fmt_h = "{:>" + str(lw) + "}" + 6 * " {:>12}" + os.linesep
+        fmt_d = "{:>" + str(lw) + "}" + 6 * " {:12.4f}" + os.linesep
 
-        data = fmt_h.format("label", "seconds", "minutes",
-                            "rel_percent", "cum_sec", "cum_min", "cum_percent")
+        data = fmt_h.format('label', 'seconds', 'minutes', 'rel_percent',
+                            'cum_sec', 'cum_min', 'cum_percent')
         for t in filter(None, self._timers):
             data += fmt_d.format(t.label, t.seconds, t.minutes,
                                  t.relative_percent, t.cumulative_seconds,
@@ -262,7 +254,8 @@ class SmartTimer:
             # Last item or item specified by label
             stack_idx = -1
 
-            # Label-paired timer
+            # Label-paired timer.
+            # Label can be "", so explicitly check against None.
             if label is not None:
                 # Find index of last timer in stack with matching label
                 for i, t in enumerate(self._timer_stack[::-1]):
@@ -298,7 +291,8 @@ class SmartTimer:
             t_diff.cumulative_minutes = -1.
             t_diff.cumulative_percent = -1.
 
-            # Use label
+            # Use label.
+            # Label can be "", so explicitly check against None.
             if label is not None:
                 t_diff.label = label
 
@@ -373,12 +367,12 @@ class SmartTimer:
         self._timer.reset()
         self.clear()
 
-    def dump_times(self, filename="", mode='w'):
+    def dump_times(self, filename=None, mode='w'):
         """Write timing results to a file.
 
         If *filename* is provided, then it will be used as the filename.
         Otherwise :attr:`name` is used if non-empty, else the default filename
-        is used. The extension *txt* is appended only if filename does not
+        is used. The extension *.times* is appended only if filename does not
         already has an extension. Using *mode* the file can be overwritten or
         appended with timing data.
 
@@ -386,12 +380,13 @@ class SmartTimer:
 
         Args:
             filename (str, optional): Name of file.
+
             mode (str, optional): Mode flag passed to `open`_. Default is *w*.
         """
-        if len(filename) == 0:
+        if not filename:
             filename = self.name if self.name else self.DEFAULT_NAME
         if not os.path.splitext(filename)[1]:
-            filename += ".txt"
+            filename += ".times"
 
         with open(filename, mode) as fd:
             # Remove excess whitespace used by __str__
@@ -408,8 +403,8 @@ class SmartTimer:
             * If *label* is 'None' then all completed timings are used.
 
         Args:
-            label (str, iterable, optional): String used to match timer labels
-                to select.
+            label (str, iterable, optional): String/regex used to match timer
+                labels to select.
 
         Returns:
             `types.SimpleNamespace`_: Namespace with stats in seconds/minutes.
@@ -430,19 +425,14 @@ class SmartTimer:
             minutes = []
             selected = []
             for ll in label:
-                # NOTE: Extra work? Regex not always used
-                label_regex = re.compile(r"\b{}\b".format(ll))
                 for t in timers:
-                    matched = False
-                    if ll.isalnum():
-                        if label_regex.search(t.label):
-                            matched = True
-                    elif ll == t.label:
-                        matched = True
-                    if matched and t not in selected:
-                        seconds.append(t.seconds)
-                        minutes.append(t.minutes)
-                        selected.append(t)
+                    if (ll.isalnum() \
+                       and re.search(r"\b{}\b".format(ll), t.label)) \
+                       or ll == t.label:
+                        if t not in selected:
+                            seconds.append(t.seconds)
+                            minutes.append(t.minutes)
+                            selected.append(t)
 
         if selected:
             total_seconds = sum(seconds)
@@ -504,7 +494,7 @@ class SmartTimer:
     def get_profile(self):
         return self._prof.getstats()
 
-    def dump_profile(self, filename="", mode='w'):
+    def dump_profile(self, filename=None, mode='w'):
         """Write profiling results to a file.
 
         If *filename* is provided, then it will be used as the filename.
@@ -517,15 +507,11 @@ class SmartTimer:
 
         Args:
             filename (str, optional): Name of file.
+
             mode (str, optional): Mode flag passed to `open`_. Default is *w*.
         """
         if not filename:
             filename = self.name if self.name else self.DEFAULT_NAME
-        base, ext = os.path.splitext(filename)
-        if not ext:
+        if not os.path.splitext(filename)[1]:
             filename += ".prof"
-        else:
-            # TODO: strip extension so that it does not clashes with .txt
-            pass
-        # TODO: allow to append to file
         self._prof.dump_stats(filename)

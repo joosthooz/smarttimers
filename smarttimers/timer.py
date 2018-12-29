@@ -1,62 +1,53 @@
 """Utilities to measure time from system and custom clocks/counters.
 
 Classes:
-    * :class:`Timer`
     * :class:`TimerDict`
-
-Todo:
-    * Extend to support additional stats besides time (e.g., psutil).
-    * Integrate PAPI counters.
-    * Support timing concurrent processes (e.g., time.thread_time).
+    * :class:`Timer`
 """
 
 
+__all__ = ['TimerDict', 'Timer']
+
+
+import os
 import time
 import types
 from .exceptions import TimerCompatibilityError
-
-
-__all__ = ['Timer', 'TimerDict']
 
 
 class TimerDict(dict):
     """Map between label identifier and callable object.
 
     Args:
-        tdict (dict, TimerDict, str -> callable, optional): Dictionary for
-            initialization.
+        tdict (dict, optional): Mapping between strings and timing functions.
 
     Raises:
-        KeyError: If keys are not strings or does not exists.
+        KeyError: If key is not a string or does not exists.
         ValueError: If value is not a callable object.
     """
-    def __init__(self, tdict=dict()):
-        self.update(tdict)
+    def __init__(self, tdict=None):
+        if tdict:
+            self.update(tdict)
 
     def __setitem__(self, key, value):
         if not isinstance(key, str):
             raise KeyError("key '{}' is not a {}".format(key, str))
+        if not key:
+            raise KeyError("key is empty {}".format(str))
         if not callable(value):
             raise ValueError("value '{}' is not callable".format(value))
         super().__setitem__(key, value)
 
-    def __getitem__(self, key):
-        if not isinstance(key, str):
-            raise KeyError("key '{}' is not a {}".format(key, str))
-        if key not in self.keys():
-            raise KeyError("key '{}' does not exists".format(key))
-        return super().__getitem__(key)
-
     def update(self, tdict):
         """Extends map with given dictionary.
 
-        Only accepts *dict* or :class:`TimerDict` arguments.
-
-        TypeError: If *tdict* is not derived from dict.
+        Raises:
+            TypeError: If *tdict* is not derived from dict.
         """
-        if not isinstance(tdict, (dict, type(self))):
-            raise TypeError("dict '{}' is not a {} or {}"
-                                 .format(tdict, dict, type(self)))
+        if not isinstance(tdict, dict):
+            raise TypeError("dict '{}' is not a {}".format(tdict, dict))
+
+        # Add key-values manually to invoke __setitem__ error checks
         for k, v in tdict.items():
             self[k] = v
 
@@ -76,8 +67,7 @@ class MetaTimerProperty(type):
     @DEFAULT_CLOCK_NAME.setter
     def DEFAULT_CLOCK_NAME(cls, value):
         if not isinstance(value, str):
-            raise TypeError("'DEFAULT_CLOCK_NAME' is not a {}"
-                                 .format(str))
+            raise TypeError("'DEFAULT_CLOCK_NAME' is not a {}".format(str))
         cls._DEFAULT_CLOCK_NAME = value
 
     @property
@@ -86,9 +76,8 @@ class MetaTimerProperty(type):
 
     @CLOCKS.setter
     def CLOCKS(cls, value):
-        if not isinstance(value, (dict, TimerDict)):
-            raise TypeError("'CLOCKS' is not a {} or {}"
-                                 .format(dict, TimerDict))
+        if not isinstance(value, dict):
+            raise TypeError("'CLOCKS' is not a {}".format(dict))
         cls._CLOCKS = value if isinstance(value, TimerDict) \
             else TimerDict(value)
 
@@ -171,11 +160,6 @@ class Timer(metaclass=MetaTimerProperty):
           operators. Otherwise a :class:`TimerCompatibilityError` exception
           occurs.
 
-    Warning:
-        When registering a new timing function to :attr:`CLOCKS`, it is
-        recommended to use a unique clock name to prevent overwriting over an
-        existing one.
-
     Attributes:
         DEFAULT_CLOCK_NAME (str): Default clock name, used when
             :attr:`clock_name` is empty string.
@@ -233,11 +217,12 @@ class Timer(metaclass=MetaTimerProperty):
     def __init__(self, label="", **kwargs):
         self.label = label
 
-        # Check if another Timer is provided for initialization
-        other = kwargs.get('timer')
-        if isinstance(other, Timer):
-            self._set_time(other.seconds)
-            self.clock_name = other.clock_name
+        # Check if another Timer was provided for initialization.
+        # Timer has precedence over explicit time.
+        timer = kwargs.get('timer', None)
+        if timer:
+            self._set_time(timer.seconds)
+            self.clock_name = timer.clock_name
         else:
             self._set_time(kwargs.get('seconds', 0.))
             self.clock_name = kwargs.get('clock_name',
@@ -247,57 +232,53 @@ class Timer(metaclass=MetaTimerProperty):
         """String representation.
 
         Returns:
-            str: Comma delimited string (:attr:`seconds`,
-                :attr:`minutes`, :attr:`label`)
+            str: Delimited string (:attr:`seconds`, :attr:`minutes`,
+                :attr:`label`)
         """
-        return "{:>12}, {:12.6f}, {:12.6f}" \
+        return "{:>12} {:12.6f} {:12.6f}" \
                .format(self.label, self.seconds, self.minutes)
 
-    def __add__(self, other):
-        if not self.is_compatible(other):
-            raise TimerCompatibilityError("incompatible clocks")
-        new_label = '+'.join(filter(None, [self.label, other.label]))
-        return Timer(new_label,
-                     seconds=self.seconds + other.seconds,
+    def __add__(self, timer):
+        if not self.is_compatible(timer):
+            raise TimerCompatibilityError
+        return Timer(label='+'.join(filter(None, [self.label, timer.label])),
+                     seconds=self.seconds + timer.seconds,
                      clock_name=self.clock_name)
 
-    def __sub__(self, other):
-        if not self.is_compatible(other):
-            raise TimerCompatibilityError("incompatible clocks")
-        new_label = '-'.join(filter(None, [self.label, other.label]))
-        return Timer(new_label,
-                     seconds=abs(self.seconds - other.seconds),
+    def __sub__(self, timer):
+        if not self.is_compatible(timer):
+            raise TimerCompatibilityError
+        return Timer(label='-'.join(filter(None, [self.label, timer.label])),
+                     seconds=abs(self.seconds - timer.seconds),
                      clock_name=self.clock_name)
 
-    def __eq__(self, other):
-        # Return false if not compatible to allow index searches in Timer
-        # iterables
-        if not self.is_compatible(other):
+    def __eq__(self, timer):
+        # Return false if not compatible, do not raise exception.
+        # This method is used during index searches in Timer iterations.
+        if not self.is_compatible(timer):
             return False
-        return self.seconds == other.seconds
+        return self.seconds == timer.seconds
 
-    def __lt__(self, other):
-        if not self.is_compatible(other):
-            raise TimerCompatibilityError("incompatible clocks")
-        return self.seconds < other.seconds
+    def __lt__(self, timer):
+        if not self.is_compatible(timer):
+            raise TimerCompatibilityError
+        return self.seconds < timer.seconds
 
-    def __le__(self, other):
-        return self < other or self == other
+    def __le__(self, timer):
+        return self < timer or self == timer
 
-    def __gt__(self, other):
-        return not (self <= other)
+    def __gt__(self, timer):
+        return not (self <= timer)
 
-    def __ge__(self, other):
-        return not (self < other)
+    def __ge__(self, timer):
+        return not (self < timer)
 
     def _set_time(self, seconds):
         # Do checks here because attribute is read-only
         if not isinstance(seconds, (int, float)):
-            raise TypeError("seconds '{}' is not a {}".format(seconds,
-                                                                   float))
+            raise TypeError("value '{}' is not a {}".format(seconds, float))
         if seconds < 0.:
-            raise ValueError("seconds '{}' is not a non-negative number"
-                                  .format(seconds))
+            raise ValueError("value '{}' is negative".format(seconds))
         self._seconds = float(seconds)
         self._minutes = seconds / 60.
 
@@ -330,16 +311,17 @@ class Timer(metaclass=MetaTimerProperty):
     @clock_name.setter
     def clock_name(self, clock_name):
         if not isinstance(clock_name, str):
-            raise TypeError("clock_name '{}' is not a {}"
-                                 .format(clock_name, str))
+            raise TypeError("clock_name '{}' is not a {}".format(clock_name,
+                                                                 str))
 
         # Clear time if new clock is incompatible with previous one. Skip
         # check if setting for the first time (e.g., __init__) to prevent
         # clearing time values that had been set previously.
         #
-        # Note: can create an infinite loop if not careful. is_compatible() is
+        # Note: Creates an infinite loop if not careful. is_compatible() is
         # called which in turn creates a Timer object which calls this property
-        # during initialization.
+        # during initialization. Attribute _clock_name is created here, so use
+        # it as a sentinel to detect when not called from __init__.
         if hasattr(self, '_clock_name') and not self.is_compatible(clock_name):
             self.clear()
 
@@ -384,7 +366,7 @@ class Timer(metaclass=MetaTimerProperty):
         # Otherwise create and populate a namespace with the timing function.
         try:
             return time.get_clock_info(self.clock_name)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError) as ex:
             clock_info = {
                 "adjustable": None,
                 "implementation": type(self).CLOCKS[self.clock_name].__name__,
@@ -394,17 +376,18 @@ class Timer(metaclass=MetaTimerProperty):
 
     def print_info(self):
         """Pretty print clock information."""
-        print("{name}:\n"
-              "    function      : {func}\n"
-              "    adjustable    : {info.adjustable}\n"
-              "    implementation: {info.implementation}\n"
-              "    monotonic     : {info.monotonic}\n"
+        print("{name}:{lsep}"
+              "    function      : {func}{lsep}"
+              "    adjustable    : {info.adjustable}{lsep}"
+              "    implementation: {info.implementation}{lsep}"
+              "    monotonic     : {info.monotonic}{lsep}"
               "    resolution    : {info.resolution}"
               .format(name=self.clock_name,
                       func=type(self).CLOCKS[self.clock_name],
-                      info=self.get_info()))
+                      info=self.get_info(),
+                      lsep=os.linesep))
 
-    def is_compatible(self, other):
+    def is_compatible(self, timer):
         """Return truth of compatibility between a :class:`Timer` pair.
 
         For a :attr:`clock_name` that can be queried with
@@ -412,57 +395,26 @@ class Timer(metaclass=MetaTimerProperty):
         identical. Otherwise the timing functions have to be the same.
 
         Args:
-            other (Timer): Second instance.
+            timer (Timer): Second instance.
 
         Returns:
             bool: True if compatible, else False.
         """
-        if not isinstance(other, Timer):
+        if not isinstance(timer, Timer):
             return False
 
-        # Exception occurs when time.get_clock_info() receives an unknown clock
+        # Exception is triggered if time.get_clock_info() does not support the
+        # provided clock_name.
         try:
             return time.get_clock_info(self.clock_name) == \
-                time.get_clock_info(other.clock_name)
-        except Exception:
+                time.get_clock_info(timer.clock_name)
+        except Exception as ex:
             return type(self).CLOCKS[self.clock_name] is \
-                type(self).CLOCKS[other.clock_name]
+                type(self).CLOCKS[timer.clock_name]
 
     def sleep(self, seconds):
         """Sleep for given seconds."""
         time.sleep(seconds)
-
-    @classmethod
-    def sum(cls, timer1, timer2):
-        """Compute the time sum of a :class:`Timer` pair.
-
-        The :attr:`label` of the resulting :class:`Timer` contains a
-        combination of *timer1* and *timer2* :attr:`label`.
-
-        Args:
-            timer1 (Timer): First instance.
-            timer2 (Timer): Second instance.
-
-        Returns:
-            Timer: Instance containing the time sum.
-        """
-        return timer1 + timer2
-
-    @classmethod
-    def diff(cls, timer1, timer2):
-        """Compute the absolute time difference of a :class:`Timer` pair.
-
-        The :attr:`label` of the resulting :class:`Timer` contains a
-        combination of *timer1* and *timer2* :attr:`label`.
-
-        Args:
-            timer1 (Timer): First instance.
-            timer2 (Timer): Second instance.
-
-        Returns:
-            Timer: Instance containing the absolute time difference.
-        """
-        return timer1 - timer2
 
     @classmethod
     def register_clock(cls, clock_name, clock_func):

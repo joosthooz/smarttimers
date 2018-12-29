@@ -30,6 +30,3 @@ Exceptions
 
 .. autoclass:: smarttimers.exceptions.TimerCompatibilityError
 .. autoclass:: smarttimers.exceptions.TimerError
-.. autoclass:: smarttimers.exceptions.TimerKeyError
-.. autoclass:: smarttimers.exceptions.TimerTypeError
-.. autoclass:: smarttimers.exceptions.TimerValueError

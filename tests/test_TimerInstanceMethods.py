@@ -1,7 +1,7 @@
 import time
 import types
 import unittest
-from smarttimers import (Timer, TimerTypeError, TimerValueError)
+from smarttimers import Timer
 from .utiltest import TestStack
 
 
@@ -29,9 +29,9 @@ class TimerInstanceMethodsTestCase(unittest.TestCase):
         # Invalid
         for value in ['0.', [0.], (0.,), {0: 0}]:
             with self.subTest(value=value):
-                with self.assertRaises(TimerTypeError):
+                with self.assertRaises(TypeError):
                     t = Timer(seconds=value)
-        with self.assertRaises(TimerValueError):
+        with self.assertRaises(ValueError):
             t = Timer(seconds=-1.)
         # Valid
         t = Timer('timer1', seconds=10.5, clock_name='clock')
@@ -81,6 +81,7 @@ class TimerInstanceMethodsTestCase(unittest.TestCase):
         t.print_info()
 
     def test_GetInfo(self):
+        TestStack.push(Timer.CLOCKS)
         # Timer with clock supported by time.get_clock_info()
         t = Timer()
         info = t.get_info()
@@ -89,7 +90,6 @@ class TimerInstanceMethodsTestCase(unittest.TestCase):
             with self.subTest(value=value):
                 self.assertIsNotNone(value)
         # Timer with custom function, does not supports time.get_clock_info()
-        TestStack.push(Timer.CLOCKS)
         Timer.register_clock('constant_time', constant_time)
         t.clock_name = 'constant_time'
         info = t.get_info()

@@ -5,15 +5,15 @@ Functions:
 """
 
 
+__all__ = ['time', '_timer']
+
+
 from functools import (partial, wraps)
 from .smarttimer import SmartTimer
 
 
-__all__ = ['time']
-
-
 # Global instance for all decorators
-_timer = SmartTimer('SmartTimer Decorator')
+_timer = SmartTimer('Function decorator')
 
 
 def time(func=None, *, timer=None):
@@ -23,9 +23,9 @@ def time(func=None, *, timer=None):
         timer (SmartTimer, optional): Instance to use to measure time. If None,
             then global SmartTimer instance, *_timer*, is used.
     """
-    if timer is None:
+    if not timer:
         timer = _timer
-    if func is None:
+    if not func:
         return partial(time, timer=timer)
 
     @wraps(func)
