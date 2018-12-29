@@ -227,7 +227,7 @@ class SmartTimerInstanceMethodsTestCase(unittest.TestCase):
         t.toc()
         # Invalid
         for fn in [1, 1., ['smarttimer'], ('smarttimer',), {'smarttimer': 1}]:
-                with self.assertRaises(AttributeError):
+                with self.assertRaises(Exception):
                     t.dump_times(filename=fn)
         # Valid
         t.dump_times(filename='', mode='w')
