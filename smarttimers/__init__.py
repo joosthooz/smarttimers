@@ -10,26 +10,22 @@ Todo:
 """
 
 
-from .exceptions import (TimerError, TimerCompatibilityError)
-from .decorators import (_timer, time)
-from .timer import (Timer, TimerDict)
+from .decorators import _timer, time
+from .timer import Timer
 from .smarttimer import SmartTimer
 
 
 __all__ = [
-    '_timer',
-    'time',
-    'Timer',
-    'TimerError'
-    'TimerCompatibilityError',
-    'TimerDict',
     'SmartTimer',
+    '_timer',
+    'Timer',
+    'time',
 ]
 
 
 __title__ = "SmartTimers"
 __name__ = "SmartTimers"
-__version__ = "1.3.0"
+__version__ = "1.3.5"
 __description__ = "Timing library with a simple and flexible API for " \
                   "measuring a variety of consecutive and nested code blocks."
 __keywords__ = [

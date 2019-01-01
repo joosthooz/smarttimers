@@ -14,19 +14,9 @@ Timer
 .. autoclass:: smarttimers.timer.Timer
     :members:
 
-.. autoclass:: smarttimers.timer.TimerDict
-    :no-undoc-members:
-
 
 Decorators
 ----------
 
 .. automodule:: smarttimers.decorators
     :members:
-
-
-Exceptions
-----------
-
-.. autoclass:: smarttimers.exceptions.TimerCompatibilityError
-.. autoclass:: smarttimers.exceptions.TimerError
