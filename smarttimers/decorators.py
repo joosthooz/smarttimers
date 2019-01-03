@@ -1,22 +1,21 @@
-"""SmartTimer decorators
-
-Functions:
-    :func:`time`
-"""
+"""SmartTimer decorators."""
 
 
-__all__ = ['time', '_timer']
+__all__ = [
+    'smarttime',
+    'decorator_timer'
+    ]
 
 
-from functools import (partial, wraps)
 from .smarttimer import SmartTimer
+from functools import wraps, partial
 
 
 # Global instance for all decorators
-_timer = SmartTimer('Function decorator')
+decorator_timer = SmartTimer("Function decorator")
 
 
-def time(func=None, *, timer=None):
+def smarttime(func=None, *, timer=None):
     """Measure runtime for functions/methods.
 
     Args:
@@ -24,7 +23,7 @@ def time(func=None, *, timer=None):
             then global SmartTimer instance, *_timer*, is used.
     """
     if not timer:
-        timer = _timer
+        timer = decorator_timer
     if not func:
         return partial(time, timer=timer)
 

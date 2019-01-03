@@ -2,27 +2,32 @@
 
 Classes:
     :class:`SmartTimer`
+
+Note:
+    Internal operations may affect the time measurements by a factor of
+    milliseconds. In a future release, this noise will be corrected.
 """
 
 
-__all__ = ['SmartTimer']
+__all__ = [
+    'TimerStat',
+    'SmartTimer'
+    ]
 
 
-import cProfile
-try:
-    import numpy
-except ImportError:
-    HAS_NUMPY = False
-else:
-    HAS_NUMPY = True
-from functools import (partial, wraps)
 import os
 import re
-import signal
-import types
-from collections import defaultdict
-from .exceptions import TimerError
+import numpy
+import cProfile
+import time as std_time
 from .timer import Timer
+from functools import wraps, partial
+from .clocks import are_clocks_compatible
+from collections import namedtuple, defaultdict
+
+
+_TimerStat_fields = ('min', 'max', 'total', 'avg',)
+TimerStat = namedtuple('TimerStat', _TimerStat_fields)
 
 
 class SmartTimer:
@@ -30,6 +35,7 @@ class SmartTimer:
 
     Args:
         name (str, optional): Name of container. Default is *smarttimer*.
+
         kwargs (dict, optional): Map of options to configure the internal
             `Timer`_. Default is `Timer`_ defaults.
 
@@ -48,6 +54,9 @@ class SmartTimer:
           ``toc('B')``
         * Mixed: arbitrary combinations of schemes
 
+    .. _`namedtuple`:
+        https://docs.python.org/3.3/library/collections.html#collections.namedtuple
+
     Attributes:
         name (str): Name of container. May be used for filename in
             :meth:`write_to_file`.
@@ -62,11 +71,14 @@ class SmartTimer:
 
         times (dict): Map of times elapsed for completed blocks. Keys are the
             labels used when invoking :meth:`tic`.
-    """
 
-    def __init__(self, name="", **kwargs):
-        self.name = name if name else self.DEFAULT_NAME
-        self._timer = Timer(label="", **kwargs)  # internal Timer
+        walltime (float): Elapsed time between first and last timings.
+    """
+    DEFAULT_CLOCK_NAME = 'process_time'
+
+    def __init__(self, name=None, **kwargs):
+        self.name = name
+        self._timer = Timer(label=None, **kwargs)  # internal Timer
         self._first_tic = None  # pointer used to calculate walltime
         self._last_tic = self._timer  # pointer used to support cascade scheme
         self._timers = []  # completed time blocks
@@ -74,118 +86,110 @@ class SmartTimer:
         self._prof = None  # profiling object
 
     @property
-    def DEFAULT_NAME(self):
-        return "smarttimer"
-
-    @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, name):
-        self._name = name
-
-    @property
     def labels(self):
-        return [t.label for t in filter(None, self._timers)]
+        return tuple(t.label for t in self._filter_timers())
 
     @property
     def active_labels(self):
-        return [t.label for t in self._timer_stack]
+        return tuple(t.label for t in self._timer_stack)
 
     @property
     def seconds(self):
-        return [t.seconds for t in filter(None, self._timers)]
+        return tuple(t.seconds for t in self._filter_timers())
 
     @property
     def minutes(self):
-        return [t.minutes for t in filter(None, self._timers)]
+        return tuple(t.minutes for t in self._filter_timers())
 
     @property
     def relative_percent(self):
-        return [t.relative_percent for t in filter(None, self._timers)]
+        return tuple(t.relative_percent for t in self._filter_timers())
 
     @property
     def cumulative_seconds(self):
-        return [t.cumulative_seconds for t in filter(None, self._timers)]
+        return tuple(t.cumulative_seconds for t in self._filter_timers())
 
     @property
     def cumulative_minutes(self):
-        return [t.cumulative_minutes for t in filter(None, self._timers)]
+        return tuple(t.cumulative_minutes for t in self._filter_timers())
 
     @property
     def cumulative_percent(self):
-        return [t.cumulative_percent for t in filter(None, self._timers)]
+        return tuple(t.cumulative_percent for t in self._filter_timers())
 
     @property
     def times(self):
         times_map = defaultdict(list)
-        for t in filter(None, self._timers):
+        for t in self._filter_timers():
             times_map[t.label].append(t.seconds)
         return times_map
 
-    def __str__(self):
-        # len('label') = 5
-        lw = max(5, max(map(len, self.labels))) if self.labels else 5
-        fmt_h = "{:>" + str(lw) + "}" + 6 * " {:>12}" + os.linesep
-        fmt_d = "{:>" + str(lw) + "}" + 6 * " {:12.4f}" + os.linesep
+    @property
+    def clock_name(self):
+        return self._timer.clock_name
 
-        data = fmt_h.format('label', 'seconds', 'minutes', 'rel_percent',
-                            'cum_sec', 'cum_min', 'cum_percent')
-        for t in filter(None, self._timers):
-            data += fmt_d.format(t.label, t.seconds, t.minutes,
-                                 t.relative_percent, t.cumulative_seconds,
-                                 t.cumulative_minutes, t.cumulative_percent)
+    @clock_name.setter
+    def clock_name(self, clock_name):
+        if not are_clocks_compatible(self._timer.clock_name, clock_name):
+            self._timers = list(self._filter_timers())
+            self._timer_stack = []
+            self._first_tic = None
+            self._last_tic = self._timer
+        self._timer.clock_name = clock_name
+
+    @property
+    def info(self):
+        return self._timer.info
+
+    @property
+    def walltime(self):
+        if not any(self._timers):
+            return 0.
+        return self._timer.seconds - self._first_tic.seconds
+
+    def _filter_timers(self):
+        return filter(None, self._timers)
+
+    def __repr__(self):
+        return "{cls}(name={name},"\
+               " timer={timer})"\
+               .format(cls=type(self).__qualname__,
+                       name=repr(self.name),
+                       timer=repr(self._timer))
+
+    def __str__(self):
+        if not self.labels:
+            return ""
+        lw = max(len('label'), max(map(len, self.labels)))
+        fmt_head = "{:>" + str(lw) + "}" + 6 * " {:>12}" + os.linesep
+        fmt_data = "{:>" + str(lw) + "}" + 6 * " {:12.4f}" + os.linesep
+        data = fmt_head.format('label', 'seconds', 'minutes', 'rel_percent',
+                               'cum_sec', 'cum_min', 'cum_percent')
+        for t in self._filter_timers():
+            data += fmt_data.format(t.label, t.seconds, t.minutes,
+                                    t.relative_percent, t.cumulative_seconds,
+                                    t.cumulative_minutes, t.cumulative_percent)
         return data
 
     def __enter__(self):
         self.tic()
         return self
 
+    def __eq__(self, other):
+        return NotImplemented
+
+    __hash__ = None
+
     def __exit__(self, *args):
         self.toc()
 
-    def __getitem__(self, *keys):
-        """Query time(s) of completed code blocks.
-
-        Args:
-            keys (str, slice, integer): Key(s) to select times. If string, then
-                consider it as a label used in :meth:`tic`. If integer or
-                slice, then consider it as an index (based on :meth:`tic`
-                ordering). Key types can be mixed.
-
-        Returns:
-            None: If key did not match a completed `Timer`_ label.
-            list, float: Time in seconds of completed code blocks.
-        """
-        # Ensure 'key' is a single level iterable to allow loop
-        # processing. When an iterable or multiple keys are passed,
-        # the arguments are automatically organized as a tuple of
-        # tuple of values ((arg1,arg2),).
-        if isinstance(keys[0], tuple):
-            keys = keys[0]
-
-        seconds = []
-        for key in keys:
-            if isinstance(key, str):
-                seconds.extend(self.times[key])
-            elif isinstance(key, int):
-                seconds.append(self._timers[key].seconds)
-            elif isinstance(key, slice):
-                seconds.append(self.seconds[key])
-
-        if not seconds:
-            return None
-        else:
-            return seconds if len(seconds) > 1 else seconds[0]
+    def __getitem__(self, key):
+        value = self.times[key]
+        return value[0] if len(value) == 1 else value
 
     def _update_cumulative_and_percent(self):
-        """Set cumulative and percent attributes to completed timers.
-
-        Percent calculations are based on :attr:`seconds`.
-        """
         total_seconds = sum(self.seconds)
-        for i, t in enumerate(filter(None, self._timers)):
+        for i, t in enumerate(self._filter_timers()):
             # Skip timers already processed, only update percentages
             if t.cumulative_seconds < 0. or t.cumulative_minutes < 0.:
                 t.cumulative_seconds = t.seconds
@@ -197,7 +201,7 @@ class SmartTimer:
             t.relative_percent = t.seconds / total_seconds
             t.cumulative_percent = t.cumulative_seconds / total_seconds
 
-    def tic(self, label=""):
+    def tic(self, label=None):
         """Start measuring time.
 
         Measure time at the latest moment possible to minimize noise from
@@ -207,7 +211,7 @@ class SmartTimer:
             label (str): Label identifier for current code block.
         """
         # _last_tic -> timer of most recent tic
-        self._last_tic = Timer(label=label)
+        self._last_tic = Timer(label=label, clock_name=self._timer.clock_name)
 
         # _first_tic -> timer of first tic
         if self._first_tic is None:
@@ -225,11 +229,6 @@ class SmartTimer:
     def toc(self, label=None):
         """Stop measuring time at end of code block.
 
-        Note:
-            In cascade regions, that is, multiple toc() calls, O(ms) noise will
-            be introduced. In a future release, there is the possibility of
-            correcting this noise, but even the correction is noise itself.
-
         Args:
             label (str): Label identifier for current code block.
 
@@ -237,12 +236,12 @@ class SmartTimer:
             float: Measured time in seconds.
 
         Raises:
-            TimerError, KeyError: If there is not a matching :meth:`tic`.
+            Exception, KeyError: If there is not a matching :meth:`tic`.
         """
         # Error if no tic pair (e.g., toc() after instance creation)
         # _last_tic -> _timer
         if self._last_tic is self._timer:
-            raise TimerError("'toc()' has no matching 'tic()'")
+            raise Exception("'toc()' has no matching 'tic()'")
 
         # Measure time at the soonest moment possible to minimize noise from
         # internal operations.
@@ -263,8 +262,7 @@ class SmartTimer:
                         stack_idx = len(self._timer_stack) - i - 1
                         break
                 else:
-                    raise KeyError("label '{}' has no matching label"
-                                        .format(label))
+                    raise KeyError("'{}' has no matching label".format(label))
 
             # Calculate time elapsed
             t_first = self._timer_stack.pop(stack_idx)
@@ -304,53 +302,22 @@ class SmartTimer:
 
         return t_diff.seconds
 
-    def walltime(self):
-        """Compute elapsed time in seconds between first :meth:`tic` and
-        most recent :meth:`toc`.
-
-        :meth:`walltime` >= sum(:attr:`seconds`)
-        """
-        if any(self._timers):
-            return (self._timer.seconds - self._first_tic.seconds,
-                    self._timer.minutes - self._first_tic.minutes)
-        else:
-            return (0., 0.)
-
     def print_info(self):
-        """Pretty print information of registered clock."""
         self._timer.print_info()
 
     def remove(self, *keys):
         """Remove time(s) of completed code blocks.
 
         Args:
-            keys (str, slice, integer): Key(s) to select times. If string, then
-                consider it as a label used in :meth:`tic`. If integer or
-                slice, then consider it as an index (based on :meth:`tic`
-                ordering). Key types can be mixed.
+            keys (str): Keys to select times for removal based on the label
+                used in :meth:`tic`.
         """
-        # Ensure 'key' is a single level iterable to allow loop
-        # processing. When an iterable or multiple keys are passed,
-        # the arguments are automatically organized as a tuple of
-        # tuple of values ((arg1,arg2),).
-        if isinstance(keys[0], tuple):
-            keys = keys[0]
-
         for key in keys:
-            if isinstance(key, str):
-                for t in filter(None, self._timers[:]):
-                    if key == t.label:
-                        self._timers.remove(t)
-            elif isinstance(key, int):
-                for i, t in enumerate(filter(None, self._timers[:])):
-                    if key == i:
-                        self._timers.remove(t)
-            elif isinstance(key, slice):
-                for t in list(filter(None, self._timers))[key]:
+            for t in filter(None, self._timers[:]):
+                if key == t.label:
                     self._timers.remove(t)
 
     def clear(self):
-        """Empty internal storage."""
         self._timers = []
         self._timer_stack = []
         self._timer.clear()
@@ -361,10 +328,9 @@ class SmartTimer:
         self._prof = None
 
     def reset(self):
-        """Restore :attr:`name`, reset clock to default value, and empty
-        internal storage."""
-        self.name = self.DEFAULT_NAME
+        self.name = None
         self._timer.reset()
+        self._timer.clock_name = type(self).DEFAULT_CLOCK_NAME
         self.clear()
 
     def dump_times(self, filename=None, mode='w'):
@@ -384,9 +350,12 @@ class SmartTimer:
             mode (str, optional): Mode flag passed to `open`_. Default is *w*.
         """
         if not filename:
-            filename = self.name if self.name else self.DEFAULT_NAME
+            if not self.name:
+                raise ValueError("either provide an explicit filename or set"
+                                 " 'name' attribute")
+            filename = self.name
         if not os.path.splitext(filename)[1]:
-            filename += ".times"
+            filename += '.times'
 
         with open(filename, mode) as fd:
             # Remove excess whitespace used by __str__
@@ -397,19 +366,18 @@ class SmartTimer:
         """Compute total, min, max, and average stats for timings.
 
         Note:
-            * An alphanumeric label is used as a word-bounded regular
-              expression.
-            * A non-alphanumeric label is compared literally.
-            * If *label* is 'None' then all completed timings are used.
+            * *label* is compared as a word-bounded expression.
 
         Args:
-            label (str, iterable, optional): String/regex used to match timer
-                labels to select.
+            label (str, iterable, None, optional): String used to match timer
+                labels to select. To use as a regular expression, *label*
+                has to be a raw string. If None, then all completed timings are
+                used.
 
         Returns:
-            `types.SimpleNamespace`_: Namespace with stats in seconds/minutes.
+            TimerStat, None: Stats in seconds and minutes (`namedtuple`_).
         """
-        timers = list(filter(None, self._timers))
+        timers = list(self._filter_timers())
 
         # Label can be "", so explicitly check against None
         if label is None:
@@ -428,31 +396,23 @@ class SmartTimer:
                 for t in timers:
                     if (ll.isalnum() \
                        and re.search(r"\b{}\b".format(ll), t.label)) \
-                       or ll == t.label:
-                        if t not in selected:
-                            seconds.append(t.seconds)
-                            minutes.append(t.minutes)
-                            selected.append(t)
+                       or ll == t.label and t not in selected:
+                        seconds.append(t.seconds)
+                        minutes.append(t.minutes)
+                        selected.append(t)
 
-        if selected:
-            total_seconds = sum(seconds)
-            total_minutes = sum(minutes)
-            time_stats = {
-                "total": (total_seconds, total_minutes),
-                "min": (min(seconds), min(minutes)),
-                "max": (max(seconds), max(minutes)),
-                "avg": (total_seconds / len(seconds),
-                        total_minutes / len(minutes))}
-        else:
-            time_stats = {"total": None, "min": None, "max": None, "avg": None}
+        if not selected:
+            return None
 
-        return types.SimpleNamespace(**time_stats)
+        total_seconds = sum(seconds)
+        total_minutes = sum(minutes)
+        return TimerStat(
+            min=(min(seconds), min(minutes)),
+            max=(max(seconds), max(minutes)),
+            total=(total_seconds, total_minutes),
+            avg=(total_seconds / len(seconds), total_minutes / len(minutes)))
 
-    def sleep(self, seconds):
-        """Sleep for given seconds."""
-        self._timer.sleep(seconds)
-
-    def to_array(self):
+    def asarray(self):
         """Return timing data as a list or numpy array (no labels).
 
         Data is arranged as a transposed view of :meth:`__str__` and
@@ -463,12 +423,9 @@ class SmartTimer:
         Returns:
             `numpy.ndarray`_, list: Timing data.
         """
-        data = [self.seconds, self.minutes, self.relative_percent,
+        return numpy.array([self.seconds, self.minutes, self.relative_percent,
                 self.cumulative_seconds, self.cumulative_minutes,
-                self.cumulative_percent]
-        if HAS_NUMPY:
-            return numpy.array(data)
-        return data
+                self.cumulative_percent])
 
     def pic(self, subcalls=True, builtins=True):
         """Start profiling.
@@ -478,7 +435,8 @@ class SmartTimer:
         See `profile`_
         """
         self._prof = cProfile.Profile(timer=self._timer.clock,
-                                      subcalls=subcalls, builtins=builtins)
+                                      subcalls=subcalls,
+                                      builtins=builtins)
         self._prof.enable()
 
     def poc(self):
@@ -488,7 +446,6 @@ class SmartTimer:
         self._prof.clear()
 
     def print_profile(self, sort='time'):
-        """Print profiling statistics."""
         self._prof.print_stats(sort)
 
     def get_profile(self):
@@ -511,7 +468,12 @@ class SmartTimer:
             mode (str, optional): Mode flag passed to `open`_. Default is *w*.
         """
         if not filename:
-            filename = self.name if self.name else self.DEFAULT_NAME
+            if not self.name:
+                raise ValueError("either provide an explicit filename or set"
+                                 " 'name' attribute")
+            filename = self.name
         if not os.path.splitext(filename)[1]:
-            filename += ".prof"
+            filename += '.prof'
         self._prof.dump_stats(filename)
+
+    sleep = std_time.sleep

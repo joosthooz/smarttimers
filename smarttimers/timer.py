@@ -1,21 +1,11 @@
-"""Utilities to measure time from system and custom clocks/counters.
-
-Classes:
-    * :class:`Timer`
-
-Todo:
-    * How to handle if default clock is unregistered? Also, when a clock
-      is unregistered, instances may have the old clock, error is
-      triggered.
-"""
+"""Timer module used as building block for timing libraries."""
 
 
 __all__ = ['Timer']
 
 
-import os
-import time
-import types
+import time as std_time
+from .clocks import CLOCKS, print_clock, get_clock_info, are_clocks_compatible
 
 
 class Timer:
@@ -23,16 +13,13 @@ class Timer:
 
     Args:
         label (str, None, optional): Timer identifier. Default is None.
-
         seconds (float, optional): Time measured in fractional seconds.
-                                   Default is 0.0.
-
-        clock_name (str, optional): Clock name used to select a time
-                                    measurement function. Default is
-                                    :attr:`DEFAULT_CLOCK_NAME`.
-
+            Default is 0.0.
+        clock_name (str, optional): Name to select a time measurement
+            function from :attr:`CLOCKS` map.  Default is
+            :attr:`DEFAULT_CLOCK_NAME`.
         timer (Timer, optional): Instance to copy properties from.
-                                 Default is None.
+            Default is None.
 
     A :class:`Timer` allows recording the current time measured by a
     registered timing function. Time is recorded in fractional seconds
@@ -86,90 +73,61 @@ class Timer:
     .. _`time`: https://docs.python.org/3/library/time.html
 
     Note:
+        * The available timing functions are built-ins from the standard
+          `time`_ library.
         * Custom timing functions need to have a compliant interface. If
-          a custom timing function is non-compliant, then wrap it inside
-          a compliant wrapper function. The available timing functions
-          are built-ins from the standard `time`_ library.
+          a custom timing function is non-compliant, then place it
+          inside a compliant wrapper function.
         * Only Timers with compatible clocks support arithmetic and
           logical operators. Compatible Timers use the same
           implementation function in the backend, see
           :meth:`print_clocks`.
 
-    .. _`types.SimpleNamespace`:
-        https://docs.python.org/3/library/types.html?highlight=types#types.SimpleNamespace
-    .. _`time.get_clock_info`:
-        https://docs.python.org/3/library/time.html#time.get_clock_info
+    .. _`namedtuple`:
+        https://docs.python.org/3.3/library/collections.html#collections.namedtuple
 
     Attributes:
-        DEFAULT_CLOCK_NAME (str): Clock name used when
-                                  :attr:`clock_name` is empty string or
-                                  None.
-
-        CLOCKS (dict): Map between clock names and time measurement
-                       functions.
-
-        label (str): Timer identifier.
-
+        DEFAULT_CLOCK_NAME (str): Default clock name.
+        CLOCKS (dict): Map between clock names and timing functions.
+        label (str): Identifier.
+        clock_name (str, None): Name to select a timing function from
+            :attr:`CLOCKS` map.
         seconds (float): Time measured in fractional seconds.
-
-            Set internally either during initialization or when
-            recording time.
-
         minutes (float): Time measured in minutes.
-
-        clock_name (str, None): Clock name used to select a time
-                                measurement function.
-
-            Indexes the :attr:`CLOCKS` map to select a timing function.
-            An instance time is cleared when a new and incompatible
-            clock name is set.
-
-        info (`types.SimpleNamespace`_): Namespace with clock info.
+        info (ClockInfo): Clock attributes (`namedtuple`_).
     """
+    DEFAULT_CLOCK_NAME = 'perf_counter'
 
-    DEFAULT_CLOCK_NAME = "perf_counter"
-
-    CLOCKS = {
-        "perf_counter": time.perf_counter,
-        "process_time": time.process_time,
-        "clock": time.clock,
-        "monotonic": time.monotonic,
-        "time": time.time
-        }
-
-    # Internal storage for attributes of non-built-in clocks
-    _CLOCKS_INFO = {}
-
-    def __init__(self, label=None, seconds=0., clock_name=DEFAULT_CLOCK_NAME,
-                 timer=None, **kwargs):
+    def __init__(self, label=None, **kwargs):
         self._seconds = None
         self._minutes = None
         self._clock_name = None
         self._clock = None
 
+        timer = kwargs.get('timer')
         if timer:
             self.label = label if label else timer.label
             self.seconds = timer.seconds
             self.clock_name = timer.clock_name
         else:
             self.label = label
-            self.seconds = seconds
-            self.clock_name = clock_name
+            self.seconds = kwargs.get('seconds', 0.)
+            self.clock_name = kwargs.get('clock_name',
+                                         type(self).DEFAULT_CLOCK_NAME)
 
     def __repr__(self):
-        return "{cls}(label={label}, " \
-               "seconds={seconds}, " \
-               "clock_name={clock_name}, " \
-               "function='{func}', " \
-               "adjustable={info.adjustable}, " \
-               "implementation='{info.implementation}', " \
-               "monotonic={info.monotonic}, " \
-               "resolution={info.resolution})" \
+        return "{cls}(label={label},"\
+               " seconds={seconds},"\
+               " clock_name={clock_name},"\
+               " function='{info.function}',"\
+               " adjustable={info.adjustable},"\
+               " implementation='{info.implementation}',"\
+               " monotonic={info.monotonic},"\
+               " resolution={info.resolution})"\
                .format(cls=type(self).__qualname__,
                        label=repr(self.label),
                        seconds=self.seconds,
                        clock_name=repr(self.clock_name),
-                       func=type(self).CLOCKS[self.clock_name],
                        info=self.info)
 
     def __str__(self):
@@ -178,30 +136,30 @@ class Timer:
         return fmt.format(self.label, self.seconds, self.minutes)
 
     def __add__(self, other):
-        if not type(self).is_compatible(self, other):
-            raise Exception("timers are not compatible")
-        return Timer(label='+'.join(filter(None, [self.label, other.label])),
-                     seconds=self.seconds + other.seconds,
-                     clock_name=self.clock_name)
+        if not are_clocks_compatible(self.clock_name, other.clock_name):
+            raise Exception("Timers are not compatible")
+        return type(self)(label='+'.join(filter(None, [self.label, other.label])),
+                          seconds=self.seconds + other.seconds,
+                          clock_name=self.clock_name)
 
     def __sub__(self, other):
-        if not type(self).is_compatible(self, other):
-            raise Exception("timers are not compatible")
-        return Timer(label='-'.join(filter(None, [self.label, other.label])),
+        if not are_clocks_compatible(self.clock_name, other.clock_name):
+            raise Exception("Timers are not compatible")
+        return type(self)(label='-'.join(filter(None, [self.label, other.label])),
                      seconds=self.seconds - other.seconds,
                      clock_name=self.clock_name)
 
     def __eq__(self, other):
-        if type(self).is_compatible(self, other):
-            return self.seconds == other.seconds
-        return NotImplemented
+        if not are_clocks_compatible(self.clock_name, other.clock_name):
+            raise Exception("Timers are not compatible")
+        return self.seconds == other.seconds
 
     __hash__ = None
 
     def __lt__(self, other):
-        if type(self).is_compatible(self, other):
-            return self.seconds < other.seconds
-        return NotImplemented
+        if not are_clocks_compatible(self.clock_name, other.clock_name):
+            raise Exception("Timers are not compatible")
+        return self.seconds < other.seconds
 
     def __le__(self, other):
         return self < other or self == other
@@ -231,38 +189,21 @@ class Timer:
 
     @clock_name.setter
     def clock_name(self, clock_name):
-        if clock_name not in type(self).CLOCKS:
-            raise ValueError("name '{}' is not registered".format(clock_name))
-
-        # Clear time if new clock is incompatible with previous one.
-        if self._clock_name and not type(self).is_compatible(self, clock_name):
+        if self._clock_name \
+                and not are_clocks_compatible(self.clock_name, clock_name):
             self.clear()
-
+        # Set function first to catch key error before setting clock name.
+        self._clock = CLOCKS[clock_name]
         self._clock_name = clock_name
-        self._clock = type(self).CLOCKS[self._clock_name]
 
     @property
     def info(self):
-        if self.clock_name in vars(time):
-            info = time.get_clock_info(self.clock_name)
-        else:
-            info = type(self)._CLOCKS_INFO[self.clock_name]
-        info.name = self.clock_name
-        info.function = type(self).CLOCKS[self.clock_name]
-        return info
+        return get_clock_info(self.clock_name)
+
+    def print_info(self):
+        print_clock(self.clock_name)
 
     def time(self, *args, **kwargs):
-        """Record time.
-
-        Args:
-            args (tuple, optional): Positional arguments for time
-                                    function.
-            kwargs (dict, optional): Keyword arguments for time
-                                     function.
-
-        Returns:
-            float: Time measured in fractional seconds.
-        """
         self.seconds = self._clock(*args, **kwargs)
         return self.seconds
 
@@ -274,77 +215,4 @@ class Timer:
         self.clock_name = type(self).DEFAULT_CLOCK_NAME
         self.clear()
 
-    def print_info(self):
-        """Pretty print clock information."""
-        print("{info.name}:{lsep}"
-              "    function      : {info.function}{lsep}"
-              "    adjustable    : {info.adjustable}{lsep}"
-              "    implementation: {info.implementation}{lsep}"
-              "    monotonic     : {info.monotonic}{lsep}"
-              "    resolution    : {info.resolution}"
-              .format(info=self.info, lsep=os.linesep))
-
-    @classmethod
-    def is_compatible(cls, timer1, timer2):
-        """Return truth of compatibility between a :class:`Timer` pair.
-
-        If *timers* correspond to built-in functions, use
-        `time.get_clock_info`_ and compatibility requires that all
-        attributes are identical. For custom *timers*, the timing
-        functions have to be the same.
-
-        Args:
-            timer1 (Timer, str): Timer or clock name.
-            timer2 (Timer, str): Timer or clock name.
-
-        Returns:
-            bool: True if compatible, else False.
-        """
-        clock1 = timer1.clock_name if isinstance(timer1, Timer) else timer1
-        clock2 = timer2.clock_name if isinstance(timer2, Timer) else timer2
-        if clock1 in vars(time) and clock2 in vars(time):
-            return time.get_clock_info(clock1) == time.get_clock_info(clock2)
-        else:
-            return cls.CLOCKS[clock1] is cls.CLOCKS[clock2]
-
-    @classmethod
-    def register_clock(cls, name, func, **kwargs):
-        """Registers a time function to :attr:`CLOCKS` map.
-
-        Args:
-            name (str): Clock name.
-            func (callable): Time measurement function.
-            kwargs (dict, optional): Attributes of clock.
-        """
-        cls.CLOCKS[name] = func
-        if name not in vars(time):
-            cls._CLOCKS_INFO[name] = types.SimpleNamespace(
-                adjustable=kwargs.get('adjustable', None),
-                implementation=kwargs.get('implementation', func),
-                monotonic=kwargs.get('monotonic', None),
-                resolution=kwargs.get('resolution', None))
-
-    @classmethod
-    def unregister_clock(cls, name):
-        """Remove a registered clock from :attr:`CLOCKS` map.
-
-        Args:
-            name (str): Clock name.
-        """
-        del cls.CLOCKS[name]
-        if name in cls._CLOCKS_INFO:
-            del cls._CLOCKS_INFO[name]
-
-    @classmethod
-    def print_clocks(cls):
-        """Pretty print information of registered clocks."""
-        print("Default clock: {}".format(cls.DEFAULT_CLOCK_NAME))
-        timer = Timer()
-        for name in cls.CLOCKS:
-            print()
-            timer.clock_name = name
-            timer.print_info()
-
-    @staticmethod
-    def sleep(seconds):
-        time.sleep(seconds)
+    sleep = std_time.sleep
