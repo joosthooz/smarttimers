@@ -1,2 +1,3 @@
 setuptools>=35.0
 wheel>=0.31
+numpy

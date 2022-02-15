@@ -10,16 +10,17 @@ Todo:
 """
 
 
-from .decorators import _timer, time
+from .decorators import decorator_timer, smarttime
 from .timer import Timer
-from .smarttimer import SmartTimer
+from .smarttimer import SmartTimer, TimerStat
 
 
 __all__ = [
     'SmartTimer',
-    '_timer',
+    'TimerStat',
+    'decorator_timer',
     'Timer',
-    'time',
+    'smarttime',
 ]
 
 

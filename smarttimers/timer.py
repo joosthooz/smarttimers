@@ -40,8 +40,6 @@ class Timer:
         https://docs.python.org/3/library/time.html#time.perf_counter
     .. _`time.process_time()`:
         https://docs.python.org/3/library/time.html#time.process_time
-    .. _`time.clock()`:
-        https://docs.python.org/3/library/time.html#time.clock
     .. _`time.monotonic()`:
         https://docs.python.org/3/library/time.html#time.monotonic
     .. _`time.time()`:
@@ -50,7 +48,6 @@ class Timer:
     Available time measurement functions in :attr:`CLOCKS`:
         * 'perf_counter' -> `time.perf_counter()`_
         * 'process_time' -> `time.process_time()`_
-        * 'clock'        -> `time.clock()`_ (deprecated)
         * 'monotonic'    -> `time.monotonic()`_
         * 'time'         -> `time.time()`_ (deprecated)
 

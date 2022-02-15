@@ -75,6 +75,8 @@ class SmartTimer:
         walltime (float): Elapsed time between first and last timings.
     """
     DEFAULT_CLOCK_NAME = 'process_time'
+    _LABELS = ('label', 'seconds', 'minutes', 'rel_percent', 'cum_sec',
+               'cum_min', 'cum_percent')
 
     def __init__(self, name=None, **kwargs):
         self.name = name
@@ -163,8 +165,7 @@ class SmartTimer:
         lw = max(len('label'), max(map(len, self.labels)))
         fmt_head = "{:>" + str(lw) + "}" + 6 * " {:>12}" + os.linesep
         fmt_data = "{:>" + str(lw) + "}" + 6 * " {:12.4f}" + os.linesep
-        data = fmt_head.format('label', 'seconds', 'minutes', 'rel_percent',
-                               'cum_sec', 'cum_min', 'cum_percent')
+        data = fmt_head.format(*type(self)._LABELS)
         for t in self._filter_timers():
             data += fmt_data.format(t.label, t.seconds, t.minutes,
                                     t.relative_percent, t.cumulative_seconds,
@@ -334,13 +335,13 @@ class SmartTimer:
         self.clear()
 
     def dump_times(self, filename=None, mode='w'):
-        """Write timing results to a file.
+        """Write timing results to a CSV file.
 
         If *filename* is provided, then it will be used as the filename.
         Otherwise :attr:`name` is used if non-empty, else the default filename
-        is used. The extension *.times* is appended only if filename does not
-        already has an extension. Using *mode* the file can be overwritten or
-        appended with timing data.
+        is used. The suffix and extension *-times.csv* are appended only if
+        filename does not already has an extension. Using *mode* the file can
+        be overwritten or appended with timing data.
 
         .. _`open`: https://docs.python.org/3/library/functions.html#open
 
@@ -355,12 +356,17 @@ class SmartTimer:
                                  " 'name' attribute")
             filename = self.name
         if not os.path.splitext(filename)[1]:
-            filename += '.times'
+            filename += '-times.csv'
 
         with open(filename, mode) as fd:
-            # Remove excess whitespace used by __str__
-            fd.write(re.sub(r"\s*,\s*", ",",
-                     re.sub(r"^\s*|\s*$", "", str(self), flags=re.MULTILINE)))
+            fd.write(','.join(type(self)._LABELS))
+            fd.write('\n')
+            for t in self._filter_timers():
+                data = (t.label, t.seconds, t.minutes, t.relative_percent,
+                        t.cumulative_seconds, t.cumulative_minutes,
+                        t.cumulative_percent)
+                fd.write(','.join((str(datum) for datum in data)))
+                fd.write('\n')
 
     def stats(self, label=None):
         """Compute total, min, max, and average stats for timings.

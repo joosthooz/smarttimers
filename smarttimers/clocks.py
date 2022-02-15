@@ -22,30 +22,20 @@ from numbers import Number
 from collections import namedtuple, OrderedDict
 
 
-# Predefined clocks 
+# Predefined clocks
 #  process_time: process-wide
 #  thread_time: thread-wide
 #  perf_counter: system-wide
 #  monotonic: system-wide
 #  time: system-wide
-#  clock: depends on implementation, deprecated
+CLOCKS = OrderedDict((
+    ("process_time", std_time.process_time),
+    ("perf_counter", std_time.perf_counter),
+    ("monotonic", std_time.monotonic),
+    ("time", std_time.time),
+    ))
 if sys.version_info >= (3, 7):
-    CLOCKS = OrderedDict((
-        ("process_time", std_time.process_time),
-        ("thread_time", std_time.thread_time),
-        ("perf_counter", std_time.perf_counter),
-        ("monotonic", std_time.monotonic),
-        ("time", std_time.time),
-        ("clock", std_time.clock)
-        ))
-else:
-    CLOCKS = OrderedDict((
-        ("process_time", std_time.process_time),
-        ("perf_counter", std_time.perf_counter),
-        ("monotonic", std_time.monotonic),
-        ("time", std_time.time),
-        ("clock", std_time.clock)
-        ))
+    CLOCKS["thread_time"] = std_time.thread_time
 
 # Structure used to represent clock attributes.
 _ClockInfo_fields = ('function', *vars(std_time.get_clock_info('time')))
@@ -82,7 +72,7 @@ def is_clock_function_valid(clock_function):
     except Exception as ex:
         pass
     return isinstance(clock_value, Number)
- 
+
 def register_clock(clock_name, clock_function, **kwargs):
     if not is_clock_function_valid(clock_function):
         raise ValueError("clock function to register, '{}', does not returns a"
