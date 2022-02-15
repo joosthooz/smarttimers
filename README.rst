@@ -61,11 +61,11 @@ The following schemes are supported for timing code blocks
     t.sleep(2)
     t.toc()
 
-    # Write times to file 'Example.txt'
-    t.to_file()
+    # Write times to file 'Example-times.csv'
+    t.dump_times()
 
     print(t["info"])
-    print(t.walltime())
+    print(t.walltime)
 
 .. code:: python
 
