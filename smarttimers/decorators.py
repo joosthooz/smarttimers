@@ -15,17 +15,15 @@ from functools import wraps, partial
 decorator_timer = SmartTimer("Function decorator")
 
 
-def smarttime(func=None, *, timer=None):
+def smarttime(func=None, *, timer=decorator_timer):
     """Measure runtime for functions/methods.
 
     Args:
         timer (SmartTimer, optional): Instance to use to measure time. If None,
-            then global SmartTimer instance, *_timer*, is used.
+            then global SmartTimer instance, 'decorator_timer', is used.
     """
-    if not timer:
-        timer = decorator_timer
     if not func:
-        return partial(time, timer=timer)
+        return partial(smarttime, timer=timer)
 
     @wraps(func)
     def wrapper(*args, **kwargs):
